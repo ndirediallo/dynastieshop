@@ -1,0 +1,32 @@
+# Système
+.DS_Store
+Thumbs.db
+
+# Fichiers temporaires d'édition Office
+~$*
+
+# Dépendances
+node_modules/
+
+# Builds
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Variables d'environnement (secrets) — ne jamais committer
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Éditeurs
+.vscode/*
+!.vscode/extensions.json
