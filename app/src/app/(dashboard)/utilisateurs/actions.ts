@@ -23,7 +23,7 @@ export async function createUser(input: UserCreateInput) {
   const user = await prisma.user.create({
     data: {
       name: data.name,
-      email: data.email,
+      phone: data.phone,
       passwordHash,
       role: data.role,
       boutiqueId: data.boutiqueId || null,
@@ -51,11 +51,17 @@ export async function updateUser(id: string, input: UserUpdateInput) {
     where: { id },
     data: {
       name: data.name,
-      email: data.email,
+      phone: data.phone,
       role: data.role,
       boutiqueId: data.boutiqueId || null,
       ...(data.password
-        ? { passwordHash: await bcrypt.hash(data.password, SALT_ROUNDS) }
+        ? {
+            passwordHash: await bcrypt.hash(data.password, SALT_ROUNDS),
+            // Réinitialiser un code débloque aussi un compte verrouillé
+            // suite à de précédents échecs de connexion.
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+          }
         : {}),
     },
   });

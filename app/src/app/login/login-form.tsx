@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/card";
 
 const loginSchema = z.object({
-  email: z.string().email("Adresse e-mail invalide"),
-  password: z.string().min(1, "Le mot de passe est requis"),
+  phone: z.string().min(1, "Le numéro de téléphone est requis"),
+  password: z.string().length(4, "Le code doit contenir 4 chiffres"),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -50,7 +50,9 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (result?.error) {
-      setError("E-mail ou mot de passe incorrect.");
+      setError(
+        "Numéro ou code incorrect, ou compte temporairement bloqué après plusieurs essais."
+      );
       return;
     }
 
@@ -62,32 +64,35 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Connexion</CardTitle>
         <CardDescription>
-          Connectez-vous avec votre compte pour accéder à l&apos;application.
+          Connectez-vous avec votre numéro de téléphone et votre code.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Adresse e-mail</Label>
+            <Label htmlFor="phone">Numéro de téléphone</Label>
             <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="nom@dynastieshop.com"
-              {...register("email")}
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              placeholder="622269738"
+              {...register("phone")}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">Code (4 chiffres)</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                inputMode="numeric"
+                maxLength={4}
                 autoComplete="current-password"
-                className="pr-9"
+                className="pr-9 tracking-[0.5em]"
                 {...register("password")}
               />
               <button
@@ -96,8 +101,8 @@ export function LoginForm() {
                 className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground"
                 aria-label={
                   showPassword
-                    ? "Masquer le mot de passe"
-                    : "Afficher le mot de passe"
+                    ? "Masquer le code"
+                    : "Afficher le code"
                 }
               >
                 {showPassword ? (

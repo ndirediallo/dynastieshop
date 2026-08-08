@@ -17,6 +17,8 @@ import {
   BarChart3,
   History,
   Settings,
+  ArrowLeftRight,
+  Wallet,
 } from "lucide-react";
 import { can, type Module } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -42,6 +44,13 @@ const NAV_ITEMS: NavItem[] = [
     module: "fournisseurs",
   },
   { href: "/ventes", label: "Ventes", icon: ShoppingCart, module: "ventes" },
+  {
+    href: "/transferts",
+    label: "Transferts",
+    icon: ArrowLeftRight,
+    module: "transferts",
+  },
+  { href: "/depenses", label: "Dépenses", icon: Wallet, module: "depenses" },
   { href: "/clients", label: "Clients", icon: Users, module: "clients" },
   {
     href: "/utilisateurs",
@@ -64,20 +73,27 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export function Sidebar({
-  role,
-  logoUrl,
-  companyName,
-}: {
+export interface SidebarProps {
   role: Role;
   logoUrl?: string | null;
   companyName: string;
-}) {
+  onNavigate?: () => void;
+}
+
+// Contenu de la navigation, réutilisé à la fois par la sidebar fixe
+// (desktop) et par le menu coulissant (mobile, voir mobile-nav.tsx) — pour
+// ne jamais avoir deux listes de modules à maintenir en parallèle.
+export function SidebarNav({
+  role,
+  logoUrl,
+  companyName,
+  onNavigate,
+}: SidebarProps) {
   const pathname = usePathname();
   const items = NAV_ITEMS.filter((item) => !item.module || can(role, item.module));
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-6">
         {logoUrl ? (
           <Image
@@ -105,6 +121,7 @@ export function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -118,6 +135,16 @@ export function Sidebar({
           );
         })}
       </nav>
+    </div>
+  );
+}
+
+// Sidebar fixe, visible uniquement à partir du breakpoint `md`. En dessous,
+// c'est mobile-nav.tsx (menu coulissant) qui prend le relais.
+export function Sidebar(props: SidebarProps) {
+  return (
+    <aside className="hidden w-64 shrink-0 border-r border-sidebar-border md:block">
+      <SidebarNav {...props} />
     </aside>
   );
 }

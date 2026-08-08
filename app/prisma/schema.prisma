@@ -19,25 +19,36 @@ datasource db {
 
 enum Role {
   SUPER_ADMIN
-  RESPONSABLE_BOUTIQUE
-  LOGISTIQUE
   CAISSIER
+  LOGISTIQUE
+}
+
+// Un même modèle pour les boutiques et l'entrepôt central : du point de vue
+// des stocks, un entrepôt est un emplacement comme un autre, seul son
+// `type` diffère. Évite de dupliquer toute la logique de stock/mouvements/
+// transferts dans une deuxième table, et permet d'ajouter d'autres
+// entrepôts plus tard sans migration.
+enum BoutiqueType {
+  BOUTIQUE
+  ENTREPOT
 }
 
 model Boutique {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
+  type      BoutiqueType @default(BOUTIQUE)
   address   String?
   phone     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   users          User[]
   stocks         Stock[]
   stockMovements StockMovement[]
   sales          Sale[]
   purchaseOrders PurchaseOrder[]
+  expenses       Expense[]
   transfersOut   StockTransfer[] @relation("TransferFrom")
   transfersIn    StockTransfer[] @relation("TransferTo")
 }
@@ -45,7 +56,7 @@ model Boutique {
 model User {
   id           String    @id @default(cuid())
   name         String
-  email        String    @unique
+  phone        String    @unique
   passwordHash String
   role         Role
   active       Boolean   @default(true)
@@ -54,10 +65,20 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  activityLogs   ActivityLog[]
-  sales          Sale[]
-  stockMovements StockMovement[]
-  purchaseOrders PurchaseOrder[]
+  // Protection anti brute-force : le code de connexion n'étant que 4
+  // chiffres (10 000 combinaisons), on bloque temporairement le compte
+  // après plusieurs échecs consécutifs plutôt que de compter uniquement
+  // sur la lenteur de bcrypt.
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  activityLogs       ActivityLog[]
+  sales              Sale[]
+  stockMovements     StockMovement[]
+  purchaseOrders     PurchaseOrder[]
+  transfersInitiated StockTransfer[] @relation("TransferInitiatedBy")
+  expenses           Expense[]
+  saleReturns        SaleReturn[]
 }
 
 // ---------------------------------------------------------------------------
@@ -65,63 +86,67 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  products Product[]
+  id            String        @id @default(cuid())
+  name          String        @unique
+  subCategories SubCategory[]
+  products      Product[]
 }
 
-model Brand {
-  id       String    @id @default(cuid())
-  name     String    @unique
+model SubCategory {
+  id         String   @id @default(cuid())
+  name       String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
   products Product[]
+
+  @@unique([categoryId, name])
 }
 
 model Product {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String
-  sku           String    @unique
-  barcode       String?   @unique
+  sku           String       @unique
+  barcode       String?      @unique
   description   String?
   photoUrl      String?
   categoryId    String?
-  category      Category? @relation(fields: [categoryId], references: [id])
-  brandId       String?
-  brand         Brand?    @relation(fields: [brandId], references: [id])
-  purchasePrice Decimal   @db.Decimal(12, 2)
-  sellingPrice  Decimal   @db.Decimal(12, 2)
-  promoPrice    Decimal?  @db.Decimal(12, 2)
-  minStock      Int       @default(0)
-  active        Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  category      Category?    @relation(fields: [categoryId], references: [id])
+  subCategoryId String?
+  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id])
+  active        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   variants ProductVariant[]
 }
 
-// Une variante représente une combinaison taille/couleur/pointure vendable.
-// Pour un produit sans déclinaison, une variante "par défaut" est créée.
+// Une variante représente une combinaison couleur/taille vendable — c'est
+// elle qui porte le prix, le code-barres et le stock, jamais le produit
+// générique. Pour un produit sans déclinaison, une variante "par défaut"
+// (couleur/taille vides) est créée.
 model ProductVariant {
-  id            String   @id @default(cuid())
-  productId     String
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size          String?
-  color         String?
-  sku           String?  @unique
-  barcode       String?  @unique
-  purchasePrice Decimal? @db.Decimal(12, 2)
-  sellingPrice  Decimal? @db.Decimal(12, 2)
-  promoPrice    Decimal? @db.Decimal(12, 2)
-  minStock      Int      @default(0)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color          String?
+  size           String?
+  sku            String?  @unique
+  barcode        String?  @unique
+  purchasePrice  Decimal  @db.Decimal(12, 2)
+  sellingPrice   Decimal  @db.Decimal(12, 2)
+  alertThreshold Int      @default(0)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   stocks             Stock[]
   saleItems          SaleItem[]
   purchaseOrderItems PurchaseOrderItem[]
   stockMovements     StockMovement[]
+  transferItems      StockTransferItem[]
 
-  @@unique([productId, size, color])
+  @@unique([productId, color, size])
 }
 
 // ---------------------------------------------------------------------------
@@ -148,6 +173,7 @@ enum StockMovementType {
   TRANSFERT_SORTANT
   TRANSFERT_ENTRANT
   VENTE
+  RETOUR_VENTE
   RECEPTION_ACHAT
 }
 
@@ -176,14 +202,32 @@ enum TransferStatus {
 
 model StockTransfer {
   id             String         @id @default(cuid())
+  reference      String         @unique
   fromBoutiqueId String
   fromBoutique   Boutique       @relation("TransferFrom", fields: [fromBoutiqueId], references: [id])
   toBoutiqueId   String
   toBoutique     Boutique       @relation("TransferTo", fields: [toBoutiqueId], references: [id])
   status         TransferStatus @default(EN_ATTENTE)
+  userId         String?
+  user           User?          @relation("TransferInitiatedBy", fields: [userId], references: [id])
   createdAt      DateTime       @default(now())
+  validatedAt    DateTime?
 
+  items     StockTransferItem[]
   movements StockMovement[]
+}
+
+// Le contenu prévu du transfert (quel produit, quelle quantité), distinct
+// des `StockMovement` qui ne sont créés qu'à la validation (voir section 8
+// du document d'architecture : le stock ne bouge jamais avant confirmation
+// de réception).
+model StockTransferItem {
+  id         String         @id @default(cuid())
+  transferId String
+  transfer   StockTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  variantId  String
+  variant    ProductVariant @relation(fields: [variantId], references: [id])
+  quantity   Int
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +316,7 @@ model Sale {
 
   items    SaleItem[]
   payments Payment[]
+  returns  SaleReturn[]
 }
 
 model SaleItem {
@@ -283,6 +328,32 @@ model SaleItem {
   quantity  Int
   unitPrice Decimal        @db.Decimal(12, 2)
   discount  Decimal        @default(0) @db.Decimal(12, 2)
+
+  returnItems SaleReturnItem[]
+}
+
+// Retour simple (V1) : remet la quantité en stock côté boutique et trace
+// l'opération. Pas de gestion détaillée du remboursement (espèces/avoir)
+// pour cette phase — décision validée avec le porteur du projet.
+model SaleReturn {
+  id        String   @id @default(cuid())
+  saleId    String
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  reason    String?
+  createdAt DateTime @default(now())
+
+  items SaleReturnItem[]
+}
+
+model SaleReturnItem {
+  id           String     @id @default(cuid())
+  saleReturnId String
+  saleReturn   SaleReturn @relation(fields: [saleReturnId], references: [id], onDelete: Cascade)
+  saleItemId   String
+  saleItem     SaleItem   @relation(fields: [saleItemId], references: [id])
+  quantity     Int
 }
 
 enum PaymentMethod {
@@ -301,6 +372,26 @@ model Payment {
   amount    Decimal       @db.Decimal(12, 2)
   reference String?
   createdAt DateTime      @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Dépenses
+// ---------------------------------------------------------------------------
+
+// Module volontairement simple (V1) : pas de catégories de dépenses
+// configurables, un champ texte libre suffit pour démarrer. Saisie
+// réservée au Super Admin (décision validée avec le porteur du projet).
+model Expense {
+  id         String    @id @default(cuid())
+  type       String
+  amount     Decimal   @db.Decimal(12, 2)
+  date       DateTime  @default(now())
+  boutiqueId String?
+  boutique   Boutique? @relation(fields: [boutiqueId], references: [id])
+  comment    String?
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
 }
 
 // ---------------------------------------------------------------------------

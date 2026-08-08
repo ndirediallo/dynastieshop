@@ -54,7 +54,7 @@ export default async function UtilisateursPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
-                <TableHead>E-mail</TableHead>
+                <TableHead>Téléphone</TableHead>
                 <TableHead>Rôle</TableHead>
                 <TableHead>Boutique</TableHead>
                 <TableHead>Statut</TableHead>
@@ -75,13 +75,16 @@ export default async function UtilisateursPage() {
                 users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
                     <TableCell>{ROLE_LABELS[user.role]}</TableCell>
                     <TableCell>{user.boutique?.name ?? "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className="space-x-1">
                       <Badge variant={user.active ? "success" : "secondary"}>
                         {user.active ? "Actif" : "Désactivé"}
                       </Badge>
+                      {user.lockedUntil && user.lockedUntil > new Date() && (
+                        <Badge variant="destructive">Bloqué (échecs)</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="flex items-center justify-end gap-2">
                       <ToggleActiveButton id={user.id} active={user.active} />
@@ -90,7 +93,7 @@ export default async function UtilisateursPage() {
                         user={{
                           id: user.id,
                           name: user.name,
-                          email: user.email,
+                          phone: user.phone,
                           role: user.role,
                           boutiqueId: user.boutiqueId,
                         }}

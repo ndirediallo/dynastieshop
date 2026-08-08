@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
         votre administrateur si vous pensez qu&apos;il s&apos;agit d&apos;une
         erreur.
       </p>
-      <Button render={<Link href="/dashboard" />}>
+      <Button nativeButton={false} render={<Link href="/dashboard" />}>
         Retour au tableau de bord
       </Button>
     </div>

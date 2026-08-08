@@ -41,7 +41,7 @@ interface UserDialogProps {
   user?: {
     id: string;
     name: string;
-    email: string;
+    phone: string;
     role: Role;
     boutiqueId: string | null;
   };
@@ -72,7 +72,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: user?.name ?? "",
-      email: user?.email ?? "",
+      phone: user?.phone ?? "",
       role: user?.role ?? "CAISSIER",
       boutiqueId: user?.boutiqueId ?? null,
       password: "",
@@ -119,7 +119,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Laissez le mot de passe vide pour ne pas le modifier."
+              ? "Laissez le code PIN vide pour ne pas le modifier."
               : "Renseignez les informations du compte."}
           </DialogDescription>
         </DialogHeader>
@@ -132,17 +132,29 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Adresse e-mail</Label>
-            <Input id="email" type="email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            <Label htmlFor="phone">Numéro de téléphone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              placeholder="622269738"
+              {...register("phone")}
+            />
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">
-              Mot de passe {isEdit && "(optionnel)"}
+              Code PIN (4 chiffres) {isEdit && "(optionnel)"}
             </Label>
-            <Input id="password" type="password" {...register("password")} />
+            <Input
+              id="password"
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              {...register("password")}
+            />
             {errors.password && (
               <p className="text-sm text-destructive">
                 {errors.password.message}

@@ -48,7 +48,7 @@ export default async function JournalPage({
           ],
         }
       : undefined,
-    include: { user: { select: { name: true, email: true } } },
+    include: { user: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 200,
   });

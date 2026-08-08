@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
+import type { BoutiqueType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,13 +18,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { boutiqueSchema, type BoutiqueInput } from "@/lib/schemas";
 import { createBoutique, updateBoutique } from "./actions";
+
+const TYPE_LABELS: Record<BoutiqueType, string> = {
+  BOUTIQUE: "Boutique",
+  ENTREPOT: "Entrepôt",
+};
 
 interface BoutiqueDialogProps {
   boutique?: {
     id: string;
     name: string;
+    type: BoutiqueType;
     address: string | null;
     phone: string | null;
   };
@@ -36,6 +50,7 @@ export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -43,6 +58,7 @@ export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
     resolver: zodResolver(boutiqueSchema),
     defaultValues: {
       name: boutique?.name ?? "",
+      type: boutique?.type ?? "BOUTIQUE",
       address: boutique?.address ?? "",
       phone: boutique?.phone ?? "",
     },
@@ -84,10 +100,10 @@ export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Modifier la boutique" : "Nouvelle boutique"}
+            {isEdit ? "Modifier l'emplacement" : "Nouvel emplacement"}
           </DialogTitle>
           <DialogDescription>
-            Renseignez les informations de la boutique.
+            Renseignez les informations de la boutique ou de l&apos;entrepôt.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -97,6 +113,29 @@ export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
             )}
+          </div>
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Type">
+                      {(value: BoutiqueType) => TYPE_LABELS[value]}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Adresse</Label>

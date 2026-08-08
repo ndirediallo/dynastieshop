@@ -1,6 +1,7 @@
 import { Store, Users, ShoppingCart, TriangleAlert } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
 import {
   Card,
   CardContent,
@@ -9,18 +10,46 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+function variantLabel(
+  product: { name: string },
+  variant: { color: string | null; size: string | null }
+) {
+  const details = [variant.color, variant.size].filter(Boolean).join(" / ");
+  return details ? `${product.name} — ${details}` : product.name;
+}
+
 export default async function DashboardPage() {
-  const [session, boutiques, userCount] = await Promise.all([
-    auth(),
-    prisma.boutique.findMany({
-      orderBy: { name: "asc" },
-      include: { _count: { select: { users: true } } },
-    }),
-    prisma.user.count({ where: { active: true } }),
-  ]);
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [session, boutiques, userCount, settings, monthSales, lowStocks] =
+    await Promise.all([
+      auth(),
+      prisma.boutique.findMany({
+        orderBy: { name: "asc" },
+        include: { _count: { select: { users: true } } },
+      }),
+      prisma.user.count({ where: { active: true } }),
+      getSettings(),
+      prisma.sale.findMany({
+        where: { createdAt: { gte: startOfMonth } },
+        select: { totalAmount: true },
+      }),
+      prisma.stock.findMany({
+        include: {
+          boutique: { select: { name: true } },
+          variant: { include: { product: { select: { name: true } } } },
+        },
+      }),
+    ]);
 
   const activeBoutiques = boutiques.filter((b) => b.active).length;
   const firstName = session?.user?.name?.split(" ")[0] ?? "";
+  const caMonth = monthSales.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+  const alerts = lowStocks
+    .filter((s) => s.quantity <= s.variant.alertThreshold)
+    .slice(0, 6);
 
   return (
     <div className="space-y-6">
@@ -36,15 +65,15 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="Chiffre d'affaires (mois)"
-          value="—"
-          hint="Disponible avec le module Ventes"
+          value={`${caMonth.toLocaleString()} ${settings.currency}`}
+          hint="Depuis le 1er du mois"
           icon={ShoppingCart}
           tint="pink"
         />
         <KpiCard
           title="Nombre de ventes"
-          value="—"
-          hint="Disponible avec le module Ventes"
+          value={String(monthSales.length)}
+          hint="Depuis le 1er du mois"
           icon={ShoppingCart}
           tint="green"
         />
@@ -105,10 +134,27 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Les alertes de rupture et de stock minimum apparaîtront ici une
-              fois le module Produits &amp; Stocks en place.
-            </p>
+            {alerts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucune alerte de stock pour le moment.
+              </p>
+            ) : (
+              <ul className="divide-y">
+                {alerts.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between py-2 text-sm">
+                    <div>
+                      <p className="font-medium">
+                        {variantLabel(s.variant.product, s.variant)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{s.boutique.name}</p>
+                    </div>
+                    <Badge variant={s.quantity <= 0 ? "destructive" : "secondary"}>
+                      {s.quantity <= 0 ? "Rupture" : `${s.quantity} restant(s)`}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>

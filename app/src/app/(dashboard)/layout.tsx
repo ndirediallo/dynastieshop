@@ -23,7 +23,11 @@ export default async function DashboardLayout({
         companyName={settings.companyName}
       />
       <div className="flex flex-1 flex-col">
-        <DashboardHeader user={session.user} />
+        <DashboardHeader
+          user={session.user}
+          logoUrl={settings.logoUrl}
+          companyName={settings.companyName}
+        />
         <main className="flex-1 overflow-y-auto bg-background p-6">
           {children}
         </main>

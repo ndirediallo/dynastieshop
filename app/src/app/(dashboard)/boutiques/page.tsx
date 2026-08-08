@@ -46,6 +46,7 @@ export default async function BoutiquesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Adresse</TableHead>
                 <TableHead>Téléphone</TableHead>
                 <TableHead>Utilisateurs</TableHead>
@@ -57,7 +58,7 @@ export default async function BoutiquesPage() {
               {boutiques.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center text-sm text-muted-foreground"
                   >
                     Aucune boutique enregistrée pour le moment.
@@ -68,6 +69,11 @@ export default async function BoutiquesPage() {
                   <TableRow key={boutique.id}>
                     <TableCell className="font-medium">
                       {boutique.name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {boutique.type === "ENTREPOT" ? "Entrepôt" : "Boutique"}
+                      </Badge>
                     </TableCell>
                     <TableCell>{boutique.address || "—"}</TableCell>
                     <TableCell>{boutique.phone || "—"}</TableCell>
