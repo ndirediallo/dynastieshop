@@ -23,25 +23,31 @@ function getClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// Crée le bucket s'il n'existe pas encore (idempotent) — évite une étape
-// manuelle dans le tableau de bord Supabase avant le tout premier upload.
-async function ensureBucket() {
-  const supabase = getClient();
-  const { data: buckets } = await supabase.storage.listBuckets();
-  if (buckets?.some((b) => b.name === BUCKET)) return;
-  await supabase.storage.createBucket(BUCKET, { public: true });
-}
-
 export async function uploadToStorage(
   buffer: Buffer,
   objectPath: string,
   contentType: string
 ): Promise<string> {
-  await ensureBucket();
+  // Le bucket "uploads" existe déjà (créé au premier upload de cette
+  // fonctionnalité) — le revérifier à chaque appel coûtait un aller-retour
+  // réseau complet vers l'API Storage de Supabase avant même de commencer
+  // l'upload, ce qui ralentissait chaque création de produit avec photo au
+  // point de risquer le délai maximum d'une fonction Vercel (signalé par
+  // l'utilisateur : "j'arrive pas à ajouter une image").
   const supabase = getClient();
-  const { error } = await supabase.storage
+  let { error } = await supabase.storage
     .from(BUCKET)
     .upload(objectPath, buffer, { contentType, upsert: true });
+
+  // Auto-guérison seulement si le bucket a réellement disparu — jamais
+  // vérifié par avance, donc aucun coût sur le chemin normal (tous les
+  // appels une fois le bucket créé, c'est-à-dire la quasi-totalité).
+  if (error && /bucket.*not.*found/i.test(error.message)) {
+    await supabase.storage.createBucket(BUCKET, { public: true });
+    ({ error } = await supabase.storage
+      .from(BUCKET)
+      .upload(objectPath, buffer, { contentType, upsert: true }));
+  }
   if (error) throw new Error(`Échec de l'upload : ${error.message}`);
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(objectPath);
