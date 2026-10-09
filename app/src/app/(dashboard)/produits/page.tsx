@@ -140,7 +140,7 @@ export default async function ProduitsPage({
       <PageHeader
         icon={Package}
         title="Produits"
-        description="Catalogue et variantes (couleur / taille) de DYNASTIE SHOP."
+        description="Catalogue et variantes (couleur / taille) de DYNASTIE SHOP"
         tint="blue"
         actions={
           isSuperAdmin && (

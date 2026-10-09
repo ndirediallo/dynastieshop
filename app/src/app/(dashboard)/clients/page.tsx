@@ -31,7 +31,7 @@ export default async function ClientsPage() {
       <PageHeader
         icon={Users}
         title="Clients"
-        description="Fiches clients et historique d'achats."
+        description="Fiches clients et historique d'achats"
         tint="pink"
         actions={<CustomerDialog />}
       />

@@ -78,8 +78,8 @@ export default async function NouveauTransfertPage() {
         title="Nouveau transfert"
         description={
           lockedBoutiques
-            ? "Retour de stock vers l'entrepôt central."
-            : "Le stock ne sera déplacé qu'à la confirmation de réception."
+            ? "Retour de stock vers l'entrepôt central"
+            : "Le stock ne sera déplacé qu'à la confirmation de réception"
         }
         tint="purple"
       />

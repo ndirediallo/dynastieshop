@@ -72,7 +72,7 @@ export default async function SupplierDebtsPage({
       <PageHeader
         icon={HandCoins}
         title="Dettes fournisseurs"
-        description="Marchandise reçue et suivi des paiements dus aux fournisseurs."
+        description="Marchandise reçue et suivi des paiements dus aux fournisseurs"
         tint="pink"
       />
 

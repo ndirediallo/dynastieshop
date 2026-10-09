@@ -201,7 +201,7 @@ export default async function CommandesPage({
       <PageHeader
         icon={ClipboardList}
         title="Commandes fournisseurs"
-        description="Suivi des commandes et de leur réception."
+        description="Suivi des commandes et de leur réception"
         tint="slate"
         actions={
           user.role === "SUPER_ADMIN" && (

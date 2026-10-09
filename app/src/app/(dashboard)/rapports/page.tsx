@@ -67,10 +67,10 @@ export default async function RapportsPage({
         title="Rapports"
         description={
           isSuperAdmin
-            ? "Vue d'ensemble de l'activité."
+            ? "Vue d'ensemble de l'activité"
             : isCaissier
-              ? "Ventes de votre boutique."
-              : "Stocks."
+              ? "Ventes de votre boutique"
+              : "Stocks"
         }
         tint="blue"
         actions={

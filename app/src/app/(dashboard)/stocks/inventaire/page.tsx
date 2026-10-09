@@ -58,7 +58,7 @@ export default async function InventairePage({
       <PageHeader
         icon={ClipboardList}
         title="Inventaire"
-        description="Comparez la quantité comptée physiquement à la quantité théorique."
+        description="Comparez la quantité comptée physiquement à la quantité théorique"
         tint="amber"
         actions={
           <Button

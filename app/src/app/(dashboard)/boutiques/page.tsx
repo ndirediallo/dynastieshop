@@ -79,7 +79,7 @@ export default async function BoutiquesPage({
       <PageHeader
         icon={Store}
         title="Boutiques"
-        description="Gérez les différentes boutiques de DYNASTIE SHOP."
+        description="Gérez les différentes boutiques de DYNASTIE SHOP"
         tint="purple"
         actions={<BoutiqueDialog entrepotExists={entrepotExists} />}
       />

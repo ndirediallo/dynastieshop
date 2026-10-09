@@ -115,7 +115,7 @@ export default async function UserProfilePage({
       <PageHeader
         icon={UserCog}
         title={user.name}
-        description="Profil et historique d'activité de l'utilisateur."
+        description="Profil et historique d'activité de l'utilisateur"
         tint="slate"
       />
 

@@ -91,7 +91,7 @@ export default async function InventoryHistoryPage({
       <PageHeader
         icon={History}
         title="Historique des inventaires"
-        description={`Toutes les sessions de comptage enregistrées (${total} session${total > 1 ? "s" : ""}).`}
+        description={`Toutes les sessions de comptage enregistrées (${total} session${total > 1 ? "s" : ""})`}
         tint="amber"
       />
 

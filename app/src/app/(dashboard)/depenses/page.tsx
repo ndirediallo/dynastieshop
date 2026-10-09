@@ -150,7 +150,7 @@ export default async function DepensesPage({
       <PageHeader
         icon={Wallet}
         title="Dépenses"
-        description="Suivi des sorties d'argent : fixes et ponctuelles."
+        description="Suivi des sorties d'argent : fixes et ponctuelles"
         tint="amber"
         actions={
           <>

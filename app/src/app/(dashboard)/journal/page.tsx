@@ -60,7 +60,7 @@ export default async function JournalPage({
       <PageHeader
         icon={History}
         title="Journal d'activité"
-        description={`Traçabilité des actions effectuées dans l'application (${total} entrée${total > 1 ? "s" : ""}).`}
+        description={`Traçabilité des actions effectuées dans l'application (${total} entrée${total > 1 ? "s" : ""})`}
         tint="slate"
       />
 

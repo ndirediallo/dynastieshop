@@ -93,7 +93,7 @@ export default async function CreditsPage({
       <PageHeader
         icon={HandCoins}
         title="Crédits"
-        description="Ventes à crédit accordées aux revendeurs et suivi des remboursements."
+        description="Ventes à crédit accordées aux revendeurs et suivi des remboursements"
         tint="pink"
       />
 

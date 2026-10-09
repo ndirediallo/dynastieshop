@@ -185,8 +185,8 @@ export default async function HistoriqueVentesPage({
         title="Historique des ventes"
         description={
           isSuperAdmin
-            ? "Toutes les ventes. Rien n'est jamais supprimé de cet historique."
-            : "Ventes de votre boutique."
+            ? "Toutes les ventes. Rien n'est jamais supprimé de cet historique"
+            : "Ventes de votre boutique"
         }
         tint="green"
         actions={

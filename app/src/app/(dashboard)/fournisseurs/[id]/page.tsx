@@ -140,7 +140,7 @@ export default async function SupplierDetailPage({
       <PageHeader
         icon={Truck}
         title={supplier.name}
-        description="Historique des commandes, réceptions et paiements."
+        description="Historique des commandes, réceptions et paiements"
         tint="slate"
         actions={
           <SupplierDialog

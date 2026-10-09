@@ -90,7 +90,7 @@ export default async function VentesPage() {
       <PageHeader
         icon={ShoppingCart}
         title="Caisse"
-        description="Choisissez un produit, constituez le panier et encaissez."
+        description="Choisissez un produit, constituez le panier et encaissez"
         tint="green"
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/ventes/historique" />}>

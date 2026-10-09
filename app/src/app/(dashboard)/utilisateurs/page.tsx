@@ -38,7 +38,7 @@ export default async function UtilisateursPage() {
       <PageHeader
         icon={UserCog}
         title="Utilisateurs"
-        description="Gérez les comptes et les rôles des utilisateurs."
+        description="Gérez les comptes et les rôles des utilisateurs"
         tint="slate"
         actions={<UserDialog boutiques={boutiques} />}
       />

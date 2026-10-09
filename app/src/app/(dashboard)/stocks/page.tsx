@@ -137,11 +137,11 @@ export default async function StocksPage({
         description={
           isAlertView
             ? isBoutiqueScoped
-              ? "Produits en rupture ou sous le seuil d'alerte dans votre boutique."
-              : "Produits en rupture ou sous le seuil d'alerte, toutes boutiques et entrepôt confondus."
+              ? "Produits en rupture ou sous le seuil d'alerte dans votre boutique"
+              : "Produits en rupture ou sous le seuil d'alerte, toutes boutiques et entrepôt confondus"
             : currentBoutique?.type === "ENTREPOT"
-              ? "Marchandise disponible à l'entrepôt central, avant répartition entre boutiques."
-              : "Quantités disponibles dans cette boutique."
+              ? "Marchandise disponible à l'entrepôt central, avant répartition entre boutiques"
+              : "Quantités disponibles dans cette boutique"
         }
         tint="amber"
         actions={

@@ -196,8 +196,8 @@ export default async function TransfertsPage({
         title="Transferts"
         description={
           isBoutiqueScoped
-            ? "Les transferts de votre boutique avec l'entrepôt central."
-            : "Entre l'entrepôt central et les boutiques."
+            ? "Les transferts de votre boutique avec l'entrepôt central"
+            : "Entre l'entrepôt central et les boutiques"
         }
         tint="purple"
         actions={
@@ -213,7 +213,7 @@ export default async function TransfertsPage({
           <SectionHeader
             icon={PackagePlus}
             title={`Demandes de réapprovisionnement (${pendingRestockRequests.length})`}
-            description="Signalées par les boutiques, à transformer en transfert si justifié."
+            description="Signalées par les boutiques, à transformer en transfert si justifié"
             tint="amber"
           />
           <CardContent>

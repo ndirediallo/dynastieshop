@@ -110,7 +110,7 @@ export default async function FournisseursPage({
       <PageHeader
         icon={Truck}
         title="Fournisseurs"
-        description="Fiches fournisseurs, historique d'achats et commandes en cours."
+        description="Fiches fournisseurs, historique d'achats et commandes en cours"
         tint="slate"
         actions={
           <>

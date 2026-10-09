@@ -15,7 +15,7 @@ export default async function ParametresPage() {
       <PageHeader
         icon={Settings}
         title="Paramètres"
-        description="Configuration générale de l'application."
+        description="Configuration générale de l'application"
         tint="slate"
       />
 

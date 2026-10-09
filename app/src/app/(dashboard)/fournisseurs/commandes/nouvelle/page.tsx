@@ -68,7 +68,7 @@ export default async function NouvelleCommandePage({
       <PageHeader
         icon={ClipboardList}
         title="Nouvelle commande fournisseur"
-        description="Choisissez le fournisseur, puis les produits commandés."
+        description="Choisissez le fournisseur, puis les produits commandés"
         tint="slate"
       />
       <PurchaseOrderForm

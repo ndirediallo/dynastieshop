@@ -38,7 +38,7 @@ export default async function NouveauProduitPage() {
       <PageHeader
         icon={PackagePlus}
         title="Nouvel arrivage"
-        description="Photo, informations générales, variantes et quantité reçue, tout en une fois. La quantité entre directement dans l'entrepôt."
+        description="Photo, informations générales, variantes et quantité reçue, tout en une fois. La quantité entre directement dans l'entrepôt"
         tint="blue"
       />
       <ProductForm

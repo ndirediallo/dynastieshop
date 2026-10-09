@@ -455,8 +455,8 @@ export default async function DashboardPage({
           // Logistique, réellement cantonné à sa boutique, a droit au
           // message personnalisé.
           isCaissierScoped && viewerBoutiqueName
-            ? `${/^(boutique|entrep[ôo]t)\b/i.test(viewerBoutiqueName) ? "" : "Boutique "}${viewerBoutiqueName} : vue d'ensemble de votre activité.`
-            : "Vue d'ensemble de l'activité DYNASTIE SHOP."
+            ? `${/^(boutique|entrep[ôo]t)\b/i.test(viewerBoutiqueName) ? "" : "Boutique "}${viewerBoutiqueName} : vue d'ensemble de votre activité`
+            : "Vue d'ensemble de l'activité DYNASTIE SHOP"
         }
         actions={
           isSuperAdminViewer && (
