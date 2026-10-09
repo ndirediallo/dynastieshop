@@ -314,7 +314,12 @@ export default async function DashboardPage({
       : Promise.resolve([]),
   ]);
 
-  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+  // "Super Administrateur" est un libellé de rôle, pas le nom d'une
+  // personne — "Bonjour, Super" (juste le premier mot) rendait ça visible
+  // et un peu cassé. Les autres comptes portent de vrais noms de personnes,
+  // donc le nom complet se lit naturellement dans la salutation (voir
+  // discussion avec l'utilisateur).
+  const greetingName = isSuperAdminViewer ? "" : (session?.user?.name ?? "");
   // Rappel explicite de la boutique d'affectation — un Caissier/Logistique
   // peut très bien ne pas s'en souvenir en se connectant, même s'il n'en a
   // qu'une seule (voir discussion avec l'utilisateur).
@@ -441,7 +446,7 @@ export default async function DashboardPage({
     <div className="space-y-6">
       <PageHeader
         icon={LayoutDashboard}
-        title={`Bonjour${firstName ? `, ${firstName}` : ""}`}
+        title={`Bonjour${greetingName ? `, ${greetingName}` : ""}`}
         description={
           // Un Super Admin voit toutes les boutiques sur cette page (KPI,
           // "Résumé par boutique"...) — lui montrer le nom d'une seule, même
