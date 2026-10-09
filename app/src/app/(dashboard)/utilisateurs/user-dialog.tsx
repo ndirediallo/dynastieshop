@@ -174,7 +174,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
               id="phone"
               type="tel"
               inputMode="numeric"
-              placeholder="622269738"
+              placeholder="6XX XX XX XX"
               {...register("phone")}
             />
             {errors.phone && (
