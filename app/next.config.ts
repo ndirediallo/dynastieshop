@@ -1,14 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Next.js limite par défaut une Server Action à 1 Mo — en-dessous d'une
-  // vraie photo prise au téléphone (logo, photo produit). Au-delà, la
-  // requête est rejetée avant même d'atteindre notre code, d'où l'échec
-  // silencieux signalé par l'utilisateur malgré le correctif de lenteur
-  // précédent (un problème distinct, pas le même bug).
+  // Next.js limite par défaut une Server Action à 1 Mo. Relevé à 4 Mo —
+  // pas plus : Vercel impose de son côté un plafond d'environ 4,5 Mo sur le
+  // corps d'une requête de fonction serverless, impossible à changer ici,
+  // donc inutile de viser plus haut. La vraie protection contre les photos
+  // de téléphone (souvent 3-12 Mo) est le redimensionnement côté
+  // navigateur avant envoi (voir src/lib/resize-image.ts) — cette limite
+  // n'est qu'un filet de sécurité derrière.
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: "4mb",
     },
   },
   images: {

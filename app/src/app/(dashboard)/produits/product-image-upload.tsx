@@ -5,6 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resizeImageFile } from "@/lib/resize-image";
 import { uploadProductImage } from "./actions";
 
 export function ProductImageUpload({
@@ -18,12 +19,13 @@ export function ProductImageUpload({
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const resized = await resizeImageFile(file);
 
     const formData = new FormData();
-    formData.set("image", file);
+    formData.set("image", resized);
 
     startTransition(async () => {
       try {

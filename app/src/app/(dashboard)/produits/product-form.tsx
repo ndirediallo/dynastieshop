@@ -39,6 +39,7 @@ import {
 import { SectionIcon } from "@/components/section-icon";
 import { cn } from "@/lib/utils";
 import { productSchema, type ProductInput } from "@/lib/schemas";
+import { resizeImageFile } from "@/lib/resize-image";
 import { createProduct, updateProduct, uploadProductImage } from "./actions";
 
 // Marge en direct : même principe que le total qui se recalcule au fil de
@@ -230,13 +231,24 @@ export function ProductForm({
   // juste après la création, dans le même geste pour l'utilisateur.
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // Le redimensionnement (voir resize-image.ts) prend un instant sur une
+  // grosse photo — sans ce témoin, un clic sur "Créer le produit" pendant
+  // ce court délai soumettait le formulaire avec `photoFile` encore à
+  // `null`, perdant silencieusement la photo (aucune erreur affichée).
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const onPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setIsProcessingPhoto(true);
+    try {
+      const resized = await resizeImageFile(file);
+      setPhotoFile(resized);
+      setPhotoPreview(URL.createObjectURL(resized));
+    } finally {
+      setIsProcessingPhoto(false);
+    }
   };
 
   const {
@@ -379,10 +391,15 @@ export function ProductForm({
               <Button
                 type="button"
                 variant="outline"
+                disabled={isProcessingPhoto}
                 onClick={() => photoInputRef.current?.click()}
               >
                 <Upload className="mr-2 size-4" />
-                {photoFile ? "Changer la photo" : "Ajouter une photo"}
+                {isProcessingPhoto
+                  ? "Traitement..."
+                  : photoFile
+                    ? "Changer la photo"
+                    : "Ajouter une photo"}
               </Button>
             </div>
           </CardContent>
@@ -716,11 +733,13 @@ export function ProductForm({
         </Card>
       )}
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting || isProcessingPhoto}>
         {isSubmitting
           ? "Enregistrement..."
-          : isEdit
-            ? "Enregistrer les modifications"
+          : isProcessingPhoto
+            ? "Traitement de la photo..."
+            : isEdit
+              ? "Enregistrer les modifications"
             : "Créer le produit"}
       </Button>
       </form>

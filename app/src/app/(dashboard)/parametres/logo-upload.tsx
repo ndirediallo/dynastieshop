@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resizeImageFile } from "@/lib/resize-image";
 import { uploadLogo } from "./actions";
 
 export function LogoUpload({ logoUrl }: { logoUrl: string | null }) {
@@ -13,12 +14,13 @@ export function LogoUpload({ logoUrl }: { logoUrl: string | null }) {
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const resized = await resizeImageFile(file);
 
     const formData = new FormData();
-    formData.set("logo", file);
+    formData.set("logo", resized);
 
     startTransition(async () => {
       try {
