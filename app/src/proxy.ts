@@ -61,14 +61,17 @@ export default auth((req) => {
 });
 
 export const config = {
-  // "uploads"/"icons" doivent rester publics : fichiers statiques (logo,
-  // photos produits, icônes d'application) servis depuis /public, y
-  // compris via l'optimiseur d'images de Next.js qui les relit en interne
-  // sans cookie de session. "manifest.webmanifest" doit l'être aussi : un
+  // "uploads"/"icons"/"guide-assets" doivent rester publics : fichiers
+  // statiques (logo, photos produits, icônes d'application, captures du
+  // guide d'utilisation) servis depuis /public, y compris via l'optimiseur
+  // d'images de Next.js qui les relit en interne sans cookie de session —
+  // "guide-assets" est un dossier séparé de la page /guide elle-même
+  // (toujours protégée) pour ne rendre public QUE les images, pas le
+  // contenu du guide. "manifest.webmanifest" doit l'être aussi : un
   // navigateur qui évalue "Ajouter à l'écran d'accueil" le récupère sans
   // session active, et une redirection vers /login (HTML au lieu du JSON
   // attendu) empêche l'installation de fonctionner.
   matcher: [
-    "/((?!api|_next/static|_next/image|uploads|icons|favicon.ico|manifest.webmanifest).*)",
+    "/((?!api|_next/static|_next/image|uploads|icons|guide-assets|favicon.ico|manifest.webmanifest).*)",
   ],
 };

@@ -23,6 +23,7 @@ import {
   ArrowLeftRight,
   Wallet,
   ChevronDown,
+  BookOpen,
 } from "lucide-react";
 import { can, type Module } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -95,6 +96,10 @@ const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     module: "parametres",
   },
+  // Pas de `module` : accessible à tout compte connecté — chaque module de
+  // la page elle-même reste filtré par rôle (voir /guide), même logique que
+  // le tableau de bord.
+  { href: "/guide", label: "Guide d'utilisation", icon: BookOpen },
 ];
 
 export interface SidebarBoutique {
