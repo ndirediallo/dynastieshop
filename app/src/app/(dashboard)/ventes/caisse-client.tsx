@@ -505,7 +505,7 @@ export function CaisseClient({
   return (
     <>
       <div className="grid gap-6 pb-24 lg:grid-cols-3 lg:pb-0">
-        <div className="space-y-4 lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           {boutiques.length > 1 && (
             <div className="max-w-xs space-y-2">
               <Label>Boutique</Label>
