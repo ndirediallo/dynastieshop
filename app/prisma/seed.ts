@@ -72,6 +72,11 @@ async function main() {
         passwordHash,
         role: "SUPER_ADMIN",
         boutiqueId: boutique.id,
+        // Même règle que tout compte créé depuis Utilisateurs (voir
+        // middleware.ts) : "1234" est un code public, documenté dans ce
+        // fichier — sans ce flag, un premier déploiement resterait
+        // accessible avec ce code par défaut tant que personne n'y pense.
+        mustChangePassword: true,
       },
     });
     console.log(`✔ Compte Super Administrateur créé : ${SUPER_ADMIN_PHONE}`);

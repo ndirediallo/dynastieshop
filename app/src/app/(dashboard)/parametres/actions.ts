@@ -26,6 +26,12 @@ export async function updateSettings(input: SettingsInput) {
       invoiceNextNumber: data.invoiceNextNumber,
       ticketPrefix: data.ticketPrefix,
       ticketNextNumber: data.ticketNextNumber,
+      defaultAlertThreshold: data.defaultAlertThreshold,
+      maxFailedLoginAttempts: data.maxFailedLoginAttempts,
+      lockoutDurationMinutes: data.lockoutDurationMinutes,
+      maxDiscountPercent: data.maxDiscountPercent,
+      activePaymentMethods: data.activePaymentMethods,
+      defaultDeliveryFee: data.defaultDeliveryFee,
     },
   });
 

@@ -12,7 +12,7 @@ export async function requireModuleAccess(module: Module) {
   if (!session?.user) {
     throw new ForbiddenError("Non authentifié");
   }
-  if (!can(session.user.role, module)) {
+  if (!can(session.user.role, module, session.user.extraModules)) {
     throw new ForbiddenError("Accès refusé pour ce rôle");
   }
   return session.user;
@@ -29,7 +29,7 @@ export async function requirePageAccess(module: Module) {
   if (!session?.user) {
     redirect("/login");
   }
-  if (!can(session.user.role, module)) {
+  if (!can(session.user.role, module, session.user.extraModules)) {
     redirect("/unauthorized");
   }
   return session.user;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,14 +18,17 @@ import { SidebarNav, type SidebarProps } from "@/components/sidebar";
 export function MobileNav(props: SidebarProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Ferme le panneau dès que la page change, quelle que soit la façon dont
   // la navigation a été déclenchée — plus fiable que fermer directement
   // depuis le onClick du lien, qui entrait en conflit avec la navigation
-  // côté client de Next.js (le lien ne naviguait plus du tout).
+  // côté client de Next.js (le lien ne naviguait plus du tout). On observe
+  // aussi les search params : passer de "Stock global" à une boutique reste
+  // sur /stocks et ne change que ?boutiqueId=...
   useEffect(() => {
     setOpen(false);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

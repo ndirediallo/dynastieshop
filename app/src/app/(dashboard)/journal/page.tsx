@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import {
   Card,
@@ -16,54 +18,51 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/page-header";
+import { ACTION_LABELS } from "@/lib/activity-labels";
 
-const ACTION_LABELS: Record<string, string> = {
-  LOGIN: "Connexion",
-  BOUTIQUE_CREATED: "Boutique créée",
-  BOUTIQUE_UPDATED: "Boutique modifiée",
-  BOUTIQUE_ACTIVATED: "Boutique activée",
-  BOUTIQUE_DEACTIVATED: "Boutique désactivée",
-  USER_CREATED: "Utilisateur créé",
-  USER_UPDATED: "Utilisateur modifié",
-  USER_ACTIVATED: "Utilisateur activé",
-  USER_DEACTIVATED: "Utilisateur désactivé",
-  SETTINGS_UPDATED: "Paramètres modifiés",
-  SETTINGS_LOGO_UPDATED: "Logo mis à jour",
-};
+const PAGE_SIZE = 25;
 
 export default async function JournalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
 
-  const logs = await prisma.activityLog.findMany({
-    where: q
-      ? {
-          OR: [
-            { action: { contains: q, mode: "insensitive" } },
-            { details: { contains: q, mode: "insensitive" } },
-            { user: { name: { contains: q, mode: "insensitive" } } },
-          ],
-        }
-      : undefined,
-    include: { user: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  const where = q
+    ? {
+        OR: [
+          { action: { contains: q, mode: "insensitive" as const } },
+          { details: { contains: q, mode: "insensitive" as const } },
+          { user: { name: { contains: q, mode: "insensitive" as const } } },
+        ],
+      }
+    : undefined;
+
+  const [logs, total] = await Promise.all([
+    prisma.activityLog.findMany({
+      where,
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.activityLog.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const qQuery = q ? `q=${encodeURIComponent(q)}&` : "";
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Journal d&apos;activité
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Traçabilité des actions effectuées dans l&apos;application (200
-          dernières entrées).
-        </p>
-      </div>
+      <PageHeader
+        icon={History}
+        title="Journal d'activité"
+        description={`Traçabilité des actions effectuées dans l'application (${total} entrée${total > 1 ? "s" : ""}).`}
+        tint="slate"
+      />
 
       <Card>
         <CardHeader>
@@ -128,6 +127,48 @@ export default async function JournalPage({
           </Table>
         </CardContent>
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {page} sur {totalPages}
+          </p>
+          <div className="flex gap-2">
+            {page <= 1 ? (
+              <Button variant="outline" size="sm" disabled>
+                <ChevronLeft className="mr-1 size-4" />
+                Précédent
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<Link href={`/journal?${qQuery}page=${page - 1}`} />}
+              >
+                <ChevronLeft className="mr-1 size-4" />
+                Précédent
+              </Button>
+            )}
+            {page >= totalPages ? (
+              <Button variant="outline" size="sm" disabled>
+                Suivant
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<Link href={`/journal?${qQuery}page=${page + 1}`} />}
+              >
+                Suivant
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

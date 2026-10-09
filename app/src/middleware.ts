@@ -13,6 +13,7 @@ const ROUTE_ROLES: Record<string, Role[]> = {
 };
 
 const PUBLIC_PATHS = ["/login"];
+const CHANGE_PASSWORD_PATH = "/changer-mot-de-passe";
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -26,6 +27,20 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && isPublicPath) {
+    return NextResponse.redirect(new URL("/dashboard", nextUrl.origin));
+  }
+
+  // Compte fraîchement créé (code par défaut "0000") ou réinitialisé par
+  // le Super Admin : bloqué sur cette seule page tant qu'il n'a pas choisi
+  // son propre code (voir auth.ts — le JWT est rafraîchi par un nouveau
+  // signIn() à la fin de ce flux, pas par un simple aller-retour serveur).
+  if (isLoggedIn && req.auth?.user?.mustChangePassword) {
+    if (nextUrl.pathname !== CHANGE_PASSWORD_PATH) {
+      return NextResponse.redirect(new URL(CHANGE_PASSWORD_PATH, nextUrl.origin));
+    }
+    return NextResponse.next();
+  }
+  if (isLoggedIn && nextUrl.pathname === CHANGE_PASSWORD_PATH) {
     return NextResponse.redirect(new URL("/dashboard", nextUrl.origin));
   }
 
@@ -46,8 +61,14 @@ export default auth((req) => {
 });
 
 export const config = {
-  // "uploads" doit rester public : ce sont des fichiers statiques (logo,
-  // photos produits...) servis depuis /public, y compris via l'optimiseur
-  // d'images de Next.js qui les relit en interne sans cookie de session.
-  matcher: ["/((?!api|_next/static|_next/image|uploads|favicon.ico).*)"],
+  // "uploads"/"icons" doivent rester publics : fichiers statiques (logo,
+  // photos produits, icônes d'application) servis depuis /public, y
+  // compris via l'optimiseur d'images de Next.js qui les relit en interne
+  // sans cookie de session. "manifest.webmanifest" doit l'être aussi : un
+  // navigateur qui évalue "Ajouter à l'écran d'accueil" le récupère sans
+  // session active, et une redirection vers /login (HTML au lieu du JSON
+  // attendu) empêche l'installation de fonctionner.
+  matcher: [
+    "/((?!api|_next/static|_next/image|uploads|icons|favicon.ico|manifest.webmanifest).*)",
+  ],
 };

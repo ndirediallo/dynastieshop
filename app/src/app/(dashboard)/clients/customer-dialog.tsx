@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -33,7 +34,11 @@ interface CustomerDialogProps {
 
 export function CustomerDialog({ customer, onCreated }: CustomerDialogProps) {
   const isEdit = !!customer;
-  const [open, setOpen] = useState(false);
+  // Le raccourci "Ajouter un client" dans l'en-tête (accessible depuis
+  // n'importe quelle page) renvoie ici avec ?new=1 pour ouvrir directement
+  // ce dialogue, sans étape intermédiaire.
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(() => !isEdit && searchParams.get("new") === "1");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {

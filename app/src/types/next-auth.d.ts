@@ -10,6 +10,8 @@ declare module "next-auth" {
       phone: string;
       role: Role;
       boutiqueId: string | null;
+      extraModules: string[];
+      mustChangePassword: boolean;
     } & DefaultSession["user"];
   }
 
@@ -17,6 +19,8 @@ declare module "next-auth" {
     phone: string;
     role: Role;
     boutiqueId: string | null;
+    extraModules: string[];
+    mustChangePassword: boolean;
   }
 }
 
@@ -26,5 +30,7 @@ declare module "next-auth/jwt" {
     phone: string;
     role: Role;
     boutiqueId: string | null;
+    extraModules: string[];
+    mustChangePassword: boolean;
   }
 }

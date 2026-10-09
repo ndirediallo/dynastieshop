@@ -3,44 +3,47 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Phone, ShieldAlert, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { PinInput } from "@/components/pin-input";
 
 const loginSchema = z.object({
   phone: z.string().min(1, "Le numéro de téléphone est requis"),
-  password: z.string().length(4, "Le code doit contenir 4 chiffres"),
+  password: z.string().length(4, "Le mot de passe doit contenir 4 chiffres"),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
 
+// Le bouton "Connexion rapide" pré-remplit et connecte avec un vrai compte
+// Super Admin — pratique en développement, mais ça n'a rien à faire sur une
+// page de connexion publique une fois en ligne (ce serait une porte
+// dérobée visible de tous). NODE_ENV est figé au build par Next.js, donc
+// ce bloc entier disparaît du bundle de production.
+const isDev = process.env.NODE_ENV !== "production";
+
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { phone: "", password: "" },
   });
 
-  const onSubmit = async (values: LoginValues) => {
+  const doSignIn = async (values: LoginValues) => {
     setError(null);
     setIsSubmitting(true);
     const result = await signIn("credentials", {
@@ -59,71 +62,103 @@ export function LoginForm() {
     window.location.assign(callbackUrl);
   };
 
+  const onSubmit = doSignIn;
+  const onQuickConnect = () => doSignIn({ phone: "622269738", password: "1234" });
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Connexion</CardTitle>
-        <CardDescription>
-          Connectez-vous avec votre numéro de téléphone et votre code.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="phone">Numéro de téléphone</Label>
+    <div className="w-full max-w-sm">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="space-y-1.5">
+          <Label htmlFor="phone">Numéro de téléphone</Label>
+          <div className="relative">
+            <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="phone"
               type="tel"
               inputMode="numeric"
               autoComplete="tel"
-              placeholder="622269738"
+              autoFocus
+              placeholder="6XX XX XX XX"
+              className="h-12 pl-10 text-base"
               {...register("phone")}
             />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Code (4 chiffres)</Label>
-            <div className="relative">
-              <Input
+          {errors.phone && (
+            <p className="text-sm text-destructive">{errors.phone.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Mot de passe</Label>
+            <button
+              type="button"
+              onClick={() => setShowPin((v) => !v)}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              {showPin ? (
+                <>
+                  <EyeOff className="size-3.5" />
+                  Masquer
+                </>
+              ) : (
+                <>
+                  <Eye className="size-3.5" />
+                  Afficher
+                </>
+              )}
+            </button>
+          </div>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <PinInput
                 id="password"
-                type={showPassword ? "text" : "password"}
-                inputMode="numeric"
-                maxLength={4}
-                autoComplete="current-password"
-                className="pr-9 tracking-[0.5em]"
-                {...register("password")}
+                value={field.value}
+                onChange={field.onChange}
+                masked={!showPin}
+                invalid={!!errors.password}
+                disabled={isSubmitting}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground"
-                aria-label={
-                  showPassword
-                    ? "Masquer le code"
-                    : "Afficher le code"
-                }
-              >
-                {showPassword ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
             )}
+          />
+          {errors.password && (
+            <p className="text-sm text-destructive">{errors.password.message}</p>
+          )}
+        </div>
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+            <p>{error}</p>
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Connexion..." : "Se connecter"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        )}
+
+        <Button type="submit" className="h-12 w-full text-base font-semibold" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Connexion...
+            </>
+          ) : (
+            "Se connecter"
+          )}
+        </Button>
+      </form>
+
+      {isDev && (
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-3 w-full"
+          disabled={isSubmitting}
+          onClick={onQuickConnect}
+        >
+          <Zap className="mr-2 size-4" />
+          Connexion rapide (dev)
+        </Button>
+      )}
+    </div>
   );
 }

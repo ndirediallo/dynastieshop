@@ -41,12 +41,22 @@ interface BoutiqueDialogProps {
     address: string | null;
     phone: string | null;
   };
+  // Un seul entrepôt central pour le moment (voir discussion utilisateur) :
+  // si un existe déjà, on retire "Entrepôt" des types proposés à la
+  // création pour éviter d'en créer un second, invisible dans le menu
+  // (qui suppose un entrepôt unique).
+  entrepotExists?: boolean;
 }
 
-export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
+export function BoutiqueDialog({ boutique, entrepotExists }: BoutiqueDialogProps) {
   const isEdit = !!boutique;
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const availableTypes = (
+    !isEdit && entrepotExists
+      ? (["BOUTIQUE"] as const)
+      : (["BOUTIQUE", "ENTREPOT"] as const)
+  );
 
   const {
     register,
@@ -123,13 +133,13 @@ export function BoutiqueDialog({ boutique }: BoutiqueDialogProps) {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Type">
-                      {(value: BoutiqueType) => TYPE_LABELS[value]}
+                      {(value: BoutiqueType) => TYPE_LABELS[value] ?? "Type"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                    {availableTypes.map((value) => (
                       <SelectItem key={value} value={value}>
-                        {label}
+                        {TYPE_LABELS[value]}
                       </SelectItem>
                     ))}
                   </SelectContent>

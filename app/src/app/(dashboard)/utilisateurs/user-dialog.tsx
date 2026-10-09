@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
@@ -31,19 +31,26 @@ import {
   type UserCreateInput,
   type UserUpdateInput,
 } from "@/lib/schemas";
-import { ROLE_LABELS } from "@/lib/permissions";
+import {
+  ROLE_LABELS,
+  MODULE_LABELS,
+  GRANTABLE_EXTRA_MODULES,
+  defaultModulesForRole,
+} from "@/lib/permissions";
+import { Switch } from "@/components/ui/switch";
 import { createUser, updateUser } from "./actions";
 
 const NO_BOUTIQUE = "__none__";
 
 interface UserDialogProps {
-  boutiques: { id: string; name: string }[];
+  boutiques: { id: string; name: string; type: "BOUTIQUE" | "ENTREPOT" }[];
   user?: {
     id: string;
     name: string;
     phone: string;
     role: Role;
     boutiqueId: string | null;
+    extraModules: string[];
   };
 }
 
@@ -67,6 +74,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<UserCreateInput | UserUpdateInput>({
     resolver: zodResolver(schema),
@@ -75,9 +83,38 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
       phone: user?.phone ?? "",
       role: user?.role ?? "CAISSIER",
       boutiqueId: user?.boutiqueId ?? null,
-      password: "",
+      extraModules: user?.extraModules ?? [],
+      ...(isEdit ? { resetPassword: false } : {}),
     },
   });
+
+  // Un Caissier fait des ventes, donc doit être rattaché à une vraie
+  // boutique — jamais à l'entrepôt central, qui n'a pas de caisse.
+  const role = useWatch({ control, name: "role" });
+  const boutiqueId = useWatch({ control, name: "boutiqueId" });
+  const boutiqueOptions =
+    role === "CAISSIER" ? boutiques.filter((b) => b.type === "BOUTIQUE") : boutiques;
+
+  useEffect(() => {
+    if (boutiqueId && !boutiqueOptions.some((b) => b.id === boutiqueId)) {
+      setValue("boutiqueId", null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
+  // Les accès déjà couverts par le rôle seul ne sont pas proposés en case à
+  // cocher (ils sont acquis) — seuls les modules EN PLUS du rôle le sont.
+  // Si le rôle change, on retire du tableau les entrées devenues redondantes.
+  const extraModules = useWatch({ control, name: "extraModules" }) ?? [];
+  const roleDefaults: string[] = role ? defaultModulesForRole(role) : [];
+  const extraOptions = GRANTABLE_EXTRA_MODULES.filter((m) => !roleDefaults.includes(m));
+  useEffect(() => {
+    setValue(
+      "extraModules",
+      extraModules.filter((m) => !roleDefaults.includes(m))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
 
   const onSubmit = async (values: UserCreateInput | UserUpdateInput) => {
     setIsSubmitting(true);
@@ -119,7 +156,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Laissez le code PIN vide pour ne pas le modifier."
+              ? "Modifiez les informations du compte."
               : "Renseignez les informations du compte."}
           </DialogDescription>
         </DialogHeader>
@@ -144,23 +181,38 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
               <p className="text-sm text-destructive">{errors.phone.message}</p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">
-              Code PIN (4 chiffres) {isEdit && "(optionnel)"}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              {...register("password")}
+          {isEdit ? (
+            <Controller
+              control={control}
+              name="resetPassword"
+              render={({ field }) => (
+                <label
+                  htmlFor="resetPassword"
+                  className="flex cursor-pointer items-start gap-2.5 rounded-md border p-3 text-sm hover:bg-muted/40"
+                >
+                  <input
+                    id="resetPassword"
+                    type="checkbox"
+                    className="mt-0.5 size-4 shrink-0 accent-primary"
+                    checked={field.value ?? false}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                  <span>
+                    <span className="font-medium">Réinitialiser le mot de passe</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Remet le mot de passe à 0000. L&apos;utilisateur devra en choisir un
+                      nouveau à sa prochaine connexion.
+                    </span>
+                  </span>
+                </label>
+              )}
             />
-            {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+          ) : (
+            <p className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+              Mot de passe par défaut : <span className="font-semibold text-foreground">0000</span>.
+              L&apos;utilisateur devra en choisir un nouveau dès sa première connexion.
+            </p>
+          )}
           <div className="space-y-2">
             <Label>Rôle</Label>
             <Controller
@@ -205,7 +257,7 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NO_BOUTIQUE}>Aucune boutique</SelectItem>
-                    {boutiques.map((b) => (
+                    {boutiqueOptions.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.name}
                       </SelectItem>
@@ -214,7 +266,46 @@ export function UserDialog({ boutiques, user }: UserDialogProps) {
                 </Select>
               )}
             />
+            {role === "CAISSIER" && (
+              <p className="text-xs text-muted-foreground">
+                Un caissier ne peut être rattaché qu&apos;à une boutique, pas à l&apos;entrepôt.
+              </p>
+            )}
           </div>
+
+          {extraOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label>Accès supplémentaires (optionnel)</Label>
+              <p className="text-xs text-muted-foreground">
+                En plus de ce que le rôle « {ROLE_LABELS[role] ?? role} » autorise déjà.
+              </p>
+              <div className="max-h-40 space-y-0.5 overflow-y-auto rounded-md border p-2">
+                {extraOptions.map((m) => (
+                  <label
+                    key={m}
+                    htmlFor={`extra-${m}`}
+                    className="flex cursor-pointer items-center justify-between gap-2 rounded px-1.5 py-1.5 text-sm hover:bg-muted/60"
+                  >
+                    {MODULE_LABELS[m]}
+                    <Switch
+                      id={`extra-${m}`}
+                      size="sm"
+                      checked={extraModules.includes(m)}
+                      onCheckedChange={(checked) =>
+                        setValue(
+                          "extraModules",
+                          checked
+                            ? [...extraModules, m]
+                            : extraModules.filter((x) => x !== m)
+                        )
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Enregistrement..." : "Enregistrer"}

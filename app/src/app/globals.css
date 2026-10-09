@@ -51,60 +51,68 @@
 }
 
 :root {
-  /* Palette dérivée du logo DYNASTIE SHOP (magenta #E0257A + noir #0d0d12) :
-     fond crème chaleureux, sidebar claire, accents rose de marque. */
-  --background: oklch(0.98 0.012 55);
-  --foreground: oklch(0.22 0.01 325);
+  /* Palette dérivée du logo DYNASTIE SHOP (magenta #E0257A), direction
+     "sobre et pro" (Stripe/Linear) : fond neutre proche du blanc plutôt
+     que crème, gris neutres (pas de teinte chaude), le rose de marque
+     réservé aux actions principales et à l'état actif — pas étalé sur
+     tous les survols/fonds. */
+  --background: oklch(0.99 0.001 260);
+  --foreground: oklch(0.18 0.004 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.01 325);
+  --card-foreground: oklch(0.18 0.004 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.01 325);
+  --popover-foreground: oklch(0.18 0.004 260);
   --primary: #e0257a;
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.008 55);
+  --secondary: oklch(0.965 0.002 260);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.96 0.008 55);
-  --muted-foreground: oklch(0.53 0.02 325);
-  --accent: oklch(0.95 0.03 350);
-  --accent-foreground: #7a0f45;
+  --muted: oklch(0.965 0.002 260);
+  --muted-foreground: oklch(0.5 0.006 260);
+  --accent: oklch(0.955 0.003 260);
+  --accent-foreground: oklch(0.18 0.004 260);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.006 55);
-  --input: oklch(0.91 0.006 55);
+  --border: oklch(0.91 0.003 260);
+  --input: oklch(0.91 0.003 260);
   --ring: #e0257a;
   --chart-1: #e0257a;
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --success: oklch(0.6 0.16 155);
   --success-foreground: oklch(0.99 0 0);
-  /* Sidebar claire (blanc), pastille rose douce pour l'item actif. */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.35 0.01 325);
+  /* Sidebar sombre en permanence (indépendante du bouton clair/sombre, qui
+     ne joue que sur le contenu) — direction demandée explicitement d'après
+     les captures de référence : menu foncé à gauche, contenu clair à
+     droite. --sidebar-accent sert au survol (teinte discrète) ; l'état
+     actif est une pastille pleine rose, posée directement dans
+     sidebar.tsx (bg-primary), pas via ce token. */
+  --sidebar: #12101a;
+  --sidebar-foreground: oklch(0.75 0.01 300);
   --sidebar-primary: #e0257a;
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0.03 350);
-  --sidebar-accent-foreground: oklch(0.22 0.01 325);
-  --sidebar-border: oklch(0.93 0.006 55);
+  --sidebar-accent: oklch(1 0 0 / 8%);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: #e0257a;
 }
 
 .dark {
-  --background: oklch(0.17 0.01 325);
+  --background: oklch(0.16 0.004 260);
   --foreground: oklch(0.97 0 0);
-  --card: oklch(0.22 0.012 325);
+  --card: oklch(0.21 0.004 260);
   --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.22 0.012 325);
+  --popover: oklch(0.21 0.004 260);
   --popover-foreground: oklch(0.97 0 0);
   --primary: #ec4899;
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.28 0.01 325);
+  --secondary: oklch(0.27 0.004 260);
   --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.28 0.01 325);
+  --muted: oklch(0.27 0.004 260);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.3 0.04 350);
-  --accent-foreground: oklch(0.95 0.02 350);
+  --accent: oklch(0.27 0.004 260);
+  --accent-foreground: oklch(0.97 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -116,11 +124,11 @@
   --chart-5: oklch(0.269 0 0);
   --success: oklch(0.7 0.17 155);
   --success-foreground: oklch(0.99 0 0);
-  --sidebar: #0f0e13;
-  --sidebar-foreground: oklch(0.92 0.01 325);
+  --sidebar: #0d0c10;
+  --sidebar-foreground: oklch(0.88 0.004 260);
   --sidebar-primary: #ec4899;
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: #221e29;
+  --sidebar-accent: #221622;
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: #ec4899;
@@ -136,4 +144,12 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Police dédiée aux chiffres mis en avant (tableau de bord : CA, montants,
+   quantités) — pointe vers Inter (voir layout.tsx) : chiffres tabulaires
+   bien alignés, zéro plein sans artefact. */
+.font-figures {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }

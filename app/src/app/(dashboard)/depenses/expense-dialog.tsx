@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/amount-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -31,8 +32,13 @@ const NO_BOUTIQUE = "__none__";
 
 export function ExpenseDialog({
   boutiques,
+  lockedBoutiqueName,
 }: {
   boutiques: { id: string; name: string }[];
+  // Un Caissier avec l'accès "Dépenses" ne peut enregistrer que pour SA
+  // boutique (voir actions.ts, qui l'impose aussi côté serveur) — pas de
+  // sélecteur dans ce cas, juste un rappel.
+  lockedBoutiqueName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,12 +108,16 @@ export function ExpenseDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Montant</Label>
-              <Input
-                id="amount"
-                type="number"
-                min={0}
-                step="0.01"
-                {...register("amount", { valueAsNumber: true })}
+              <Controller
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <AmountInput
+                    id="amount"
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(digits) => field.onChange(digits ? Number(digits) : 0)}
+                  />
+                )}
               />
               {errors.amount && (
                 <p className="text-sm text-destructive">{errors.amount.message}</p>
@@ -118,33 +128,40 @@ export function ExpenseDialog({
               <Input id="date" type="date" {...register("date")} />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Boutique concernée (optionnel)</Label>
-            <Controller
-              control={control}
-              name="boutiqueId"
-              render={({ field }) => (
-                <Select
-                  value={field.value ?? NO_BOUTIQUE}
-                  onValueChange={(v) => field.onChange(v === NO_BOUTIQUE ? null : v)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Non liée à une boutique">
-                      {(v: string) => boutiqueLabels[v]}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_BOUTIQUE}>Non liée à une boutique</SelectItem>
-                    {boutiques.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
+          {lockedBoutiqueName ? (
+            <div className="space-y-2">
+              <Label>Boutique</Label>
+              <p className="text-sm text-muted-foreground">{lockedBoutiqueName}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Boutique concernée (optionnel)</Label>
+              <Controller
+                control={control}
+                name="boutiqueId"
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? NO_BOUTIQUE}
+                    onValueChange={(v) => field.onChange(v === NO_BOUTIQUE ? null : v)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Non liée à une boutique">
+                        {(v: string) => boutiqueLabels[v]}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_BOUTIQUE}>Non liée à une boutique</SelectItem>
+                      {boutiques.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="comment">Commentaire (optionnel)</Label>
             <Input id="comment" {...register("comment")} />

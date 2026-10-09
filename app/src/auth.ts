@@ -4,12 +4,7 @@ import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
-
-// Le code de connexion ne fait que 4 chiffres (10 000 combinaisons) : on
-// bloque temporairement le compte après plusieurs échecs consécutifs pour
-// empêcher un tiers de les essayer toutes rapidement depuis le formulaire.
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCK_DURATION_MS = 15 * 60 * 1000;
+import { getSettings } from "@/lib/settings";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -37,14 +32,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const isValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isValid) {
+          // Le code de connexion ne fait que 4 chiffres (10 000 combinaisons) :
+          // on bloque temporairement le compte après plusieurs échecs
+          // consécutifs pour empêcher un tiers de les essayer toutes
+          // rapidement depuis le formulaire. Réglable par le Super Admin
+          // (Paramètres → Sécurité des comptes) plutôt que fixé dans le code.
+          const settings = await getSettings();
           const attempts = user.failedLoginAttempts + 1;
           await prisma.user.update({
             where: { id: user.id },
             data: {
               failedLoginAttempts: attempts,
               lockedUntil:
-                attempts >= MAX_FAILED_ATTEMPTS
-                  ? new Date(Date.now() + LOCK_DURATION_MS)
+                attempts >= settings.maxFailedLoginAttempts
+                  ? new Date(Date.now() + settings.lockoutDurationMinutes * 60 * 1000)
                   : null,
             },
           });
@@ -72,6 +73,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           phone: user.phone,
           role: user.role,
           boutiqueId: user.boutiqueId,
+          extraModules: user.extraModules,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
@@ -83,6 +86,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.phone = user.phone as string;
         token.role = user.role;
         token.boutiqueId = user.boutiqueId;
+        token.extraModules = user.extraModules;
+        token.mustChangePassword = user.mustChangePassword;
       }
       return token;
     },
@@ -91,6 +96,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.phone = token.phone as string;
       session.user.role = token.role as Role;
       session.user.boutiqueId = token.boutiqueId as string | null;
+      session.user.extraModules = (token.extraModules as string[] | undefined) ?? [];
+      session.user.mustChangePassword = (token.mustChangePassword as boolean | undefined) ?? false;
       return session;
     },
   },
