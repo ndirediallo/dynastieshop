@@ -1,13 +1,12 @@
 "use server";
 
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireModuleAccess } from "@/lib/guard";
 import { logActivity } from "@/lib/activity-log";
 import { getSettings } from "@/lib/settings";
 import { settingsSchema, type SettingsInput } from "@/lib/schemas";
+import { uploadToStorage } from "@/lib/supabase-storage";
 
 export async function updateSettings(input: SettingsInput) {
   const user = await requireModuleAccess("parametres");
@@ -59,15 +58,12 @@ export async function uploadLogo(formData: FormData) {
   }
 
   const settings = await getSettings();
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
 
   const ext = file.name.split(".").pop() || "png";
   const filename = `logo-${Date.now()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadsDir, filename), buffer);
+  const logoUrl = await uploadToStorage(buffer, filename, file.type);
 
-  const logoUrl = `/uploads/${filename}`;
   await prisma.settings.update({
     where: { id: settings.id },
     data: { logoUrl },

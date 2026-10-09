@@ -1,12 +1,11 @@
 "use server";
 
-import { mkdir, writeFile, unlink } from "fs/promises";
-import path from "path";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/guard";
 import { logActivity } from "@/lib/activity-log";
 import { applyStockMovement } from "@/lib/stock";
+import { uploadToStorage, deleteFromStorage, storagePathFromPublicUrl } from "@/lib/supabase-storage";
 import {
   categorySchema,
   subCategorySchema,
@@ -363,11 +362,8 @@ export async function deleteProduct(
   });
 
   if (product.photoUrl) {
-    try {
-      await unlink(path.join(process.cwd(), "public", product.photoUrl));
-    } catch {
-      // Le fichier peut déjà avoir disparu — ce n'est pas bloquant.
-    }
+    const objectPath = storagePathFromPublicUrl(product.photoUrl);
+    if (objectPath) await deleteFromStorage(objectPath);
   }
 
   await logActivity({
@@ -393,15 +389,11 @@ export async function uploadProductImage(productId: string, formData: FormData) 
     throw new Error("Le fichier doit être une image");
   }
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads", "produits");
-  await mkdir(uploadsDir, { recursive: true });
-
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${productId}-${Date.now()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadsDir, filename), buffer);
+  const photoUrl = await uploadToStorage(buffer, `produits/${filename}`, file.type);
 
-  const photoUrl = `/uploads/produits/${filename}`;
   const product = await prisma.product.update({
     where: { id: productId },
     data: { photoUrl },
