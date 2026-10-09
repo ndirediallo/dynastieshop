@@ -241,15 +241,36 @@ export async function createProduct(input: ProductInput) {
 // être référencées par des ventes, achats ou mouvements de stock) : on les
 // met à jour, et on n'ajoute que les nouvelles. Pour retirer une variante de
 // la vente, on la désactive (`active: false`).
+//
+// Le champ "Quantité" du formulaire d'édition représente le stock à
+// l'entrepôt central (même convention qu'à la création — voir
+// createProduct). Un écart entre la valeur soumise et le stock entrepôt
+// actuel déclenche un mouvement AJUSTEMENT (même mécanisme que Stock >
+// Inventaire), jamais une écriture directe sur la table Stock, pour que
+// l'historique des mouvements reste complet.
 export async function updateProduct(id: string, input: ProductInput) {
   const user = await requireRole("SUPER_ADMIN");
   const data = productSchema.parse(input);
+
+  const entrepot = await prisma.boutique.findFirst({ where: { type: "ENTREPOT" } });
 
   const existingVariants = await prisma.productVariant.findMany({
     where: { productId: id },
     select: { id: true },
   });
   const existingVariantIds = new Set(existingVariants.map((v) => v.id));
+
+  const currentEntrepotStock = entrepot
+    ? await prisma.stock.findMany({
+        where: { boutiqueId: entrepot.id, variantId: { in: [...existingVariantIds] } },
+        select: { variantId: true, quantity: true },
+      })
+    : [];
+  const currentEntrepotQtyByVariant = new Map(
+    currentEntrepotStock.map((s) => [s.variantId, s.quantity])
+  );
+
+  let quantityAdjusted = false;
 
   await prisma.$transaction(async (tx) => {
     await tx.product.update({
@@ -282,10 +303,44 @@ export async function updateProduct(id: string, input: ProductInput) {
           where: { id: variant.variantId },
           data: variantData,
         });
+
+        if (entrepot) {
+          const currentQty = currentEntrepotQtyByVariant.get(variant.variantId) ?? 0;
+          const delta = variant.receivedQuantity - currentQty;
+          if (delta !== 0) {
+            quantityAdjusted = true;
+            await applyStockMovement(
+              {
+                boutiqueId: entrepot.id,
+                variantId: variant.variantId,
+                type: "AJUSTEMENT",
+                quantity: delta,
+                reason: "Ajustement via modification du produit",
+                userId: user.id,
+              },
+              tx
+            );
+          }
+        }
       } else {
-        await tx.productVariant.create({
+        const created = await tx.productVariant.create({
           data: { ...variantData, productId: id },
         });
+
+        if (entrepot && variant.receivedQuantity > 0) {
+          quantityAdjusted = true;
+          await applyStockMovement(
+            {
+              boutiqueId: entrepot.id,
+              variantId: created.id,
+              type: "ENTREE",
+              quantity: variant.receivedQuantity,
+              reason: "Arrivage ajouté via modification du produit",
+              userId: user.id,
+            },
+            tx
+          );
+        }
       }
     }
   });
@@ -295,11 +350,13 @@ export async function updateProduct(id: string, input: ProductInput) {
     action: "PRODUCT_UPDATED",
     entityType: "Product",
     entityId: id,
-    details: `Produit "${data.name}" modifié`,
+    details: `Produit "${data.name}" modifié${quantityAdjusted ? " (quantité ajustée)" : ""}`,
   });
 
   revalidatePath("/produits");
   revalidatePath(`/produits/${id}`);
+  revalidatePath("/stocks");
+  revalidatePath("/dashboard");
   return { id };
 }
 

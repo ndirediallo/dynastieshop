@@ -65,6 +65,7 @@ export default async function ModifierProduitPage({
   const boutiques = [...boutiquesRaw].sort((a, b) =>
     a.type === b.type ? a.name.localeCompare(b.name) : a.type === "ENTREPOT" ? -1 : 1
   );
+  const entrepot = boutiques.find((b) => b.type === "ENTREPOT");
 
   const stocks = await prisma.stock.findMany({
     where: { variantId: { in: product.variants.map((v) => v.id) } },
@@ -200,6 +201,9 @@ export default async function ModifierProduitPage({
             sellingPrice: Number(v.sellingPrice),
             alertThreshold: v.alertThreshold,
             active: v.active,
+            warehouseQuantity: entrepot
+              ? (stockByVariantAndBoutique.get(`${v.id}:${entrepot.id}`) ?? 0)
+              : 0,
           })),
         }}
       />

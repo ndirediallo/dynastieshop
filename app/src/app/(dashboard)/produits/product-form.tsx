@@ -99,6 +99,7 @@ interface ExistingProduct {
     sellingPrice: number;
     alertThreshold: number;
     active: boolean;
+    warehouseQuantity: number;
   }[];
 }
 
@@ -277,7 +278,7 @@ export function ProductForm({
             sellingPrice: v.sellingPrice,
             alertThreshold: v.alertThreshold,
             active: v.active,
-            receivedQuantity: 0,
+            receivedQuantity: v.warehouseQuantity,
           }))
         : [emptyVariant(defaultAlertThreshold)],
     },
@@ -460,17 +461,17 @@ export function ProductForm({
                   {...register(`variants.0.alertThreshold`, { valueAsNumber: true })}
                 />
               </div>
-              {!isEdit && (
-                <div className="space-y-2">
-                  <Label htmlFor="simple-receivedQuantity">Quantité</Label>
-                  <Input
-                    id="simple-receivedQuantity"
-                    type="number"
-                    min={0}
-                    {...register(`variants.0.receivedQuantity`, { valueAsNumber: true })}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="simple-receivedQuantity">
+                  Quantité{isEdit && " (entrepôt central)"}
+                </Label>
+                <Input
+                  id="simple-receivedQuantity"
+                  type="number"
+                  min={0}
+                  {...register(`variants.0.receivedQuantity`, { valueAsNumber: true })}
+                />
+              </div>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 sm:col-span-2 lg:col-span-4">
                 <span className="text-xs font-medium text-muted-foreground">
                   Marge dégagée
@@ -480,10 +481,11 @@ export function ProductForm({
             </div>
           )}
 
-          {!isEdit && !showVariantsTable && (
+          {!showVariantsTable && (
             <p className="text-xs text-muted-foreground sm:col-span-2">
-              La quantité atterrit directement dans l&apos;entrepôt central.
-              Répartissez-la ensuite vers les boutiques via un transfert.
+              {isEdit
+                ? "La quantité correspond au stock à l'entrepôt central. La modifier crée un ajustement de stock (visible dans Stock). Pour répartir vers une boutique, utilisez un transfert."
+                : "La quantité atterrit directement dans l'entrepôt central. Répartissez-la ensuite vers les boutiques via un transfert."}
             </p>
           )}
 
@@ -614,7 +616,7 @@ export function ProductForm({
                     <TableHead>Prix de vente</TableHead>
                     <TableHead>Marge</TableHead>
                     <TableHead>Seuil d&apos;alerte</TableHead>
-                    {!isEdit && <TableHead>Quantité reçue</TableHead>}
+                    <TableHead>{isEdit ? "Quantité (entrepôt)" : "Quantité reçue"}</TableHead>
                     <TableHead>Actif</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -677,18 +679,16 @@ export function ProductForm({
                             })}
                           />
                         </TableCell>
-                        {!isEdit && (
-                          <TableCell>
-                            <Input
-                              type="number"
-                              min={0}
-                              className="w-24"
-                              {...register(`variants.${index}.receivedQuantity`, {
-                                valueAsNumber: true,
-                              })}
-                            />
-                          </TableCell>
-                        )}
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min={0}
+                            className="w-24"
+                            {...register(`variants.${index}.receivedQuantity`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Controller
@@ -722,13 +722,11 @@ export function ProductForm({
               supprimées (elles peuvent être liées à des ventes ou du stock).
               Désactivez-les si elles ne sont plus vendues.
             </p>
-            {!isEdit && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                La quantité reçue atterrit directement dans l&apos;entrepôt
-                central. Répartissez-la ensuite vers les boutiques via un
-                transfert.
-              </p>
-            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isEdit
+                ? "La quantité correspond au stock à l'entrepôt central. La modifier crée un ajustement de stock (visible dans Stock). Pour répartir vers une boutique, utilisez un transfert."
+                : "La quantité reçue atterrit directement dans l'entrepôt central. Répartissez-la ensuite vers les boutiques via un transfert."}
+            </p>
           </CardContent>
         </Card>
       )}
