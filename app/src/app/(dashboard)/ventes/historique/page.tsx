@@ -296,6 +296,7 @@ export default async function HistoriqueVentesPage({
                 name="from"
                 type="date"
                 defaultValue={filters.from ?? ""}
+                autoComplete="off"
                 className="h-7 w-[9.5rem] text-xs"
               />
             </div>
@@ -308,6 +309,7 @@ export default async function HistoriqueVentesPage({
                 name="to"
                 type="date"
                 defaultValue={filters.to ?? ""}
+                autoComplete="off"
                 className="h-7 w-[9.5rem] text-xs"
               />
             </div>

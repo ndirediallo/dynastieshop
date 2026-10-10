@@ -255,6 +255,7 @@ export default async function DepensesPage({
               name="from"
               type="date"
               defaultValue={from ?? ""}
+              autoComplete="off"
               className="h-7 w-[9.5rem] text-xs"
             />
           </div>
@@ -267,6 +268,7 @@ export default async function DepensesPage({
               name="to"
               type="date"
               defaultValue={to ?? ""}
+              autoComplete="off"
               className="h-7 w-[9.5rem] text-xs"
             />
           </div>

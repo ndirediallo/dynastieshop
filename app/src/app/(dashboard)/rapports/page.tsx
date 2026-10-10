@@ -98,6 +98,7 @@ export default async function RapportsPage({
                   name="from"
                   type="date"
                   defaultValue={from ?? ""}
+                  autoComplete="off"
                   className="h-7 w-[9.5rem] rounded-full text-xs"
                 />
               </div>
@@ -110,6 +111,7 @@ export default async function RapportsPage({
                   name="to"
                   type="date"
                   defaultValue={to ?? ""}
+                  autoComplete="off"
                   className="h-7 w-[9.5rem] rounded-full text-xs"
                 />
               </div>

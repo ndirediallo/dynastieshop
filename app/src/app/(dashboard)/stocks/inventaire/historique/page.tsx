@@ -118,11 +118,11 @@ export default async function InventoryHistoryPage({
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Du</label>
-                <Input type="date" name="from" defaultValue={from} className="h-8" />
+                <Input type="date" name="from" defaultValue={from} autoComplete="off" className="h-8" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Au</label>
-                <Input type="date" name="to" defaultValue={to} className="h-8" />
+                <Input type="date" name="to" defaultValue={to} autoComplete="off" className="h-8" />
               </div>
               <Button type="submit" variant="secondary" size="sm">
                 Filtrer

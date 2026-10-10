@@ -485,6 +485,7 @@ export default async function DashboardPage({
                   type="date"
                   defaultValue={sp.from ?? ""}
                   aria-label="Du"
+                  autoComplete="off"
                   className="h-7 w-[9rem] rounded-full text-xs"
                 />
                 <Input
@@ -492,6 +493,7 @@ export default async function DashboardPage({
                   type="date"
                   defaultValue={sp.to ?? ""}
                   aria-label="Au"
+                  autoComplete="off"
                   className="h-7 w-[9rem] rounded-full text-xs"
                 />
                 <Button type="submit" variant={hasCustomRange ? "default" : "outline"} size="sm">
