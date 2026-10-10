@@ -23,10 +23,15 @@ import { updateSettings } from "./actions";
 
 const IDLE_TIMEOUT_LABELS: Record<string, string> = {
   "0": "Jamais",
+  "1": "1 minute",
+  "2": "2 minutes",
+  "3": "3 minutes",
   "5": "5 minutes",
   "10": "10 minutes",
   "15": "15 minutes",
+  "20": "20 minutes",
   "30": "30 minutes",
+  "45": "45 minutes",
   "60": "1 heure",
 };
 
