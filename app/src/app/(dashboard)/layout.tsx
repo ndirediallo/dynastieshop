@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { Sidebar } from "@/components/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { IdleWatcher } from "@/components/idle-watcher";
 
 export default async function DashboardLayout({
   children,
@@ -25,6 +26,11 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-svh w-full">
+      <IdleWatcher
+        idleTimeoutMinutes={settings.idleTimeoutMinutes}
+        idleTimeoutMode={settings.idleTimeoutMode}
+        userName={session.user.name ?? ""}
+      />
       <Sidebar
         role={session.user.role}
         extraModules={session.user.extraModules}

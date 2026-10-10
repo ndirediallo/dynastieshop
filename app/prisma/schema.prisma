@@ -190,6 +190,11 @@ model Stock {
   @@unique([boutiqueId, variantId])
 }
 
+enum IdleTimeoutMode {
+  LOCK
+  LOGOUT
+}
+
 enum StockMovementType {
   ENTREE
   SORTIE
@@ -656,6 +661,16 @@ model Settings {
   // la course, un tarif figé par zone serait corrigé à la main de toute
   // façon (voir discussion avec l'utilisateur).
   defaultDeliveryFee Int @default(0)
+
+  // Déconnexion/verrouillage automatique après inactivité (0 = désactivé) —
+  // scénario réel : un poste de caisse resté connecté sans surveillance
+  // après une coupure de courant. Verrouillage (recode à 4 chiffres) par
+  // défaut, moins perturbant qu'une déconnexion complète pour un caissier
+  // qui s'absente quelques minutes entre deux clients ; LOGOUT reste
+  // disponible pour qui préfère la sécurité maximale. S'applique à tous les
+  // comptes de la même façon (Super Admin compris), un seul réglage global.
+  idleTimeoutMinutes Int             @default(10)
+  idleTimeoutMode    IdleTimeoutMode @default(LOCK)
 
   updatedAt DateTime @updatedAt
 }

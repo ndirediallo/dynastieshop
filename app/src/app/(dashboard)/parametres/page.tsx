@@ -41,6 +41,8 @@ export default async function ParametresPage() {
               maxDiscountPercent: settings.maxDiscountPercent,
               activePaymentMethods: settings.activePaymentMethods,
               defaultDeliveryFee: settings.defaultDeliveryFee,
+              idleTimeoutMinutes: settings.idleTimeoutMinutes,
+              idleTimeoutMode: settings.idleTimeoutMode,
             }}
           />
         </div>

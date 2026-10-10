@@ -31,6 +31,8 @@ export async function updateSettings(input: SettingsInput) {
       maxDiscountPercent: data.maxDiscountPercent,
       activePaymentMethods: data.activePaymentMethods,
       defaultDeliveryFee: data.defaultDeliveryFee,
+      idleTimeoutMinutes: data.idleTimeoutMinutes,
+      idleTimeoutMode: data.idleTimeoutMode,
     },
   });
 

@@ -96,6 +96,9 @@ export const settingsSchema = z.object({
     .array(z.string())
     .min(1, "Au moins une méthode de paiement doit rester active"),
   defaultDeliveryFee: z.number().int().min(0, "Le montant doit être positif ou nul"),
+  // 0 = désactivé.
+  idleTimeoutMinutes: z.number().int().min(0).max(240),
+  idleTimeoutMode: z.enum(["LOCK", "LOGOUT"]),
 });
 export type SettingsInput = z.infer<typeof settingsSchema>;
 

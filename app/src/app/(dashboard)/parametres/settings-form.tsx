@@ -9,9 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { settingsSchema, type SettingsInput } from "@/lib/schemas";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payment-methods";
 import { updateSettings } from "./actions";
+
+const IDLE_TIMEOUT_LABELS: Record<string, string> = {
+  "0": "Jamais",
+  "5": "5 minutes",
+  "10": "10 minutes",
+  "15": "15 minutes",
+  "30": "30 minutes",
+  "60": "1 heure",
+};
 
 export function SettingsForm({ settings }: { settings: SettingsInput }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -218,6 +235,91 @@ export function SettingsForm({ settings }: { settings: SettingsInput }) {
               Après ce nombre d&apos;échecs de connexion consécutifs, un compte
               est bloqué temporairement : protection contre les essais répétés
               d&apos;un code à 4 chiffres.
+            </p>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="mb-3 text-sm font-medium">Verrouillage automatique</h3>
+            <div className="space-y-2">
+              <Label htmlFor="idleTimeoutMinutes">Délai d&apos;inactivité</Label>
+              <Controller
+                control={control}
+                name="idleTimeoutMinutes"
+                render={({ field }) => (
+                  <Select
+                    value={String(field.value)}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                  >
+                    <SelectTrigger className="w-full sm:w-64">
+                      <SelectValue placeholder="Jamais">
+                        {(value: string) => IDLE_TIMEOUT_LABELS[value] ?? value}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(IDLE_TIMEOUT_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <Controller
+              control={control}
+              name="idleTimeoutMode"
+              render={({ field }) => (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <label
+                    className={cn(
+                      "flex cursor-pointer flex-col gap-1 rounded-md border p-3 text-sm hover:bg-muted/40",
+                      field.value === "LOCK" && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <span className="flex items-center gap-2 font-medium">
+                      <input
+                        type="radio"
+                        className="size-4 accent-primary"
+                        checked={field.value === "LOCK"}
+                        onChange={() => field.onChange("LOCK")}
+                      />
+                      Verrouillage par code
+                    </span>
+                    <span className="pl-6 text-xs text-muted-foreground">
+                      Affiche un écran « entrez votre code » après le délai,
+                      sans fermer la session.
+                    </span>
+                  </label>
+                  <label
+                    className={cn(
+                      "flex cursor-pointer flex-col gap-1 rounded-md border p-3 text-sm hover:bg-muted/40",
+                      field.value === "LOGOUT" && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <span className="flex items-center gap-2 font-medium">
+                      <input
+                        type="radio"
+                        className="size-4 accent-primary"
+                        checked={field.value === "LOGOUT"}
+                        onChange={() => field.onChange("LOGOUT")}
+                      />
+                      Déconnexion complète
+                    </span>
+                    <span className="pl-6 text-xs text-muted-foreground">
+                      Renvoie à l&apos;écran de connexion après le délai.
+                    </span>
+                  </label>
+                </div>
+              )}
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              S&apos;applique à tous les comptes (Super Admin compris). Évite
+              qu&apos;un poste resté connecté sans surveillance reste
+              accessible indéfiniment.
             </p>
           </div>
 
