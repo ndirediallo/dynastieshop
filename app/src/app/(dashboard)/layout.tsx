@@ -30,6 +30,8 @@ export default async function DashboardLayout({
         idleTimeoutMinutes={settings.idleTimeoutMinutes}
         idleTimeoutMode={settings.idleTimeoutMode}
         userName={session.user.name ?? ""}
+        logoUrl={settings.logoUrl}
+        companyName={settings.companyName}
       />
       <Sidebar
         role={session.user.role}

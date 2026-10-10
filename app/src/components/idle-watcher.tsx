@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { Lock, LogOut, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,14 @@ export function IdleWatcher({
   idleTimeoutMinutes,
   idleTimeoutMode,
   userName,
+  logoUrl,
+  companyName,
 }: {
   idleTimeoutMinutes: number;
   idleTimeoutMode: "LOCK" | "LOGOUT";
   userName: string;
+  logoUrl: string | null;
+  companyName: string;
 }) {
   // Lecture directe de sessionStorage dans l'initialiseur (plutôt qu'un
   // useEffect qui ferait un setState juste après le premier rendu) : c'est
@@ -97,15 +102,31 @@ export function IdleWatcher({
   if (!locked) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm space-y-5 rounded-2xl border bg-card p-6 shadow-lg">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Lock className="size-5" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm sm:p-6">
+      <div className="animate-in fade-in-0 zoom-in-95 w-full max-w-sm space-y-6 rounded-3xl border bg-card p-6 shadow-xl ring-1 ring-foreground/5 duration-150 sm:p-8">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="relative">
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={companyName}
+                width={64}
+                height={64}
+                className="size-16 rounded-2xl object-contain"
+                priority
+              />
+            ) : (
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground">
+                {companyName.slice(0, 1)}
+              </div>
+            )}
+            <span className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-card">
+              <Lock className="size-3.5" />
+            </span>
           </div>
           <div>
-            <p className="font-semibold">Session verrouillée</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-lg font-bold tracking-tight">Session verrouillée</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               {userName}, entrez votre code pour continuer
             </p>
           </div>
@@ -123,12 +144,16 @@ export function IdleWatcher({
           />
         </div>
 
-        {error && (
-          <div className="flex items-start justify-center gap-2 text-sm text-destructive">
-            <ShieldAlert className="mt-0.5 size-4 shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
+        <div className="flex min-h-5 items-start justify-center gap-2 text-center text-sm">
+          {error ? (
+            <div className="flex items-start gap-1.5 text-destructive">
+              <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+              <p>{error}</p>
+            </div>
+          ) : (
+            isVerifying && <p className="text-muted-foreground">Vérification...</p>
+          )}
+        </div>
 
         <Button
           type="button"
