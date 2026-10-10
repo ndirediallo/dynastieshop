@@ -102,8 +102,31 @@ export function IdleWatcher({
   if (!locked) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm sm:p-6">
-      <div className="animate-in fade-in-0 zoom-in-95 w-full max-w-sm space-y-6 rounded-3xl border bg-card p-6 shadow-xl ring-1 ring-foreground/5 duration-150 sm:p-8">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-primary p-4 sm:p-6">
+      {/* Même langage visuel que le panneau de marque de la page de
+          connexion (voir src/app/login/page.tsx) : un fond uni de marque,
+          pas un flou laissant deviner les données en dessous — plus sûr
+          (rien de sensible ne transparaît sur un poste verrouillé sans
+          surveillance) et plus habillé qu'un simple voile blanc. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute -top-24 -right-24 size-80 rounded-full bg-white/10 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="absolute -bottom-32 -left-16 size-96 rounded-full bg-black/10 blur-3xl"
+      />
+
+      <div className="animate-in fade-in-0 zoom-in-95 relative w-full max-w-sm space-y-6 rounded-3xl bg-card p-6 shadow-2xl duration-150 sm:p-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="relative">
             {logoUrl ? (
