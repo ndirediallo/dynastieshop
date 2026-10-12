@@ -85,6 +85,24 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
 
+  // Horaires de connexion (voir Settings.workHours* pour le réglage
+  // global) — suite à une question de la propriétaire sur l'accès à
+  // distance hors heures de travail. INHERIT suit le réglage global,
+  // CUSTOM applique un horaire propre à ce compte (workHoursStart/End/
+  // Days), UNRESTRICTED l'exempte totalement. Jamais appliqué à un Super
+  // Admin : ce champ existe même sur ces comptes pour simplifier le
+  // schéma, mais authorize() (auth.ts) l'ignore pour ce rôle.
+  workHoursMode           WorkHoursMode @default(INHERIT)
+  workHoursStart          String? // "HH:MM", utilisé seulement si CUSTOM
+  workHoursEnd            String? // "HH:MM", utilisé seulement si CUSTOM
+  workHoursDays           String[]      @default([]) // ex. ["MON","TUE",...], utilisé seulement si CUSTOM
+  // Exception ponctuelle accordée par la Super Admin : autorise la
+  // connexion jusqu'à cette date/heure même hors horaire normal, puis
+  // redevient automatiquement caduque — pas de bascule à retirer
+  // manuellement après coup (voir discussion : éviter d'oublier une
+  // dérogation permanente).
+  workHoursExceptionUntil DateTime?
+
   activityLogs            ActivityLog[]
   sales                   Sale[]
   stockMovements          StockMovement[]
@@ -193,6 +211,12 @@ model Stock {
 enum IdleTimeoutMode {
   LOCK
   LOGOUT
+}
+
+enum WorkHoursMode {
+  INHERIT
+  CUSTOM
+  UNRESTRICTED
 }
 
 enum StockMovementType {
@@ -671,6 +695,17 @@ model Settings {
   // comptes de la même façon (Super Admin compris), un seul réglage global.
   idleTimeoutMinutes Int             @default(10)
   idleTimeoutMode    IdleTimeoutMode @default(LOCK)
+
+  // Horaires de connexion par défaut pour les comptes non-Super-Admin —
+  // suite à une question de la propriétaire sur l'accès à distance hors
+  // heures de travail. Désactivé par défaut pour ne changer le
+  // comportement de personne tant que ce n'est pas explicitement activé.
+  // Un compte peut suivre cet horaire global, en avoir un propre, ou en
+  // être exempté (voir User.workHoursMode). Jours au format "MON".."SUN".
+  workHoursEnabled Boolean  @default(false)
+  workHoursStart   String   @default("08:00")
+  workHoursEnd     String   @default("20:00")
+  workHoursDays    String[] @default(["MON", "TUE", "WED", "THU", "FRI", "SAT"])
 
   updatedAt DateTime @updatedAt
 }

@@ -54,7 +54,7 @@ export function LoginForm() {
 
     if (result?.error) {
       setError(
-        "Numéro ou code incorrect, ou compte temporairement bloqué après plusieurs essais."
+        "Numéro ou code incorrect, compte temporairement bloqué après plusieurs essais, ou connexion hors des horaires autorisés."
       );
       return;
     }

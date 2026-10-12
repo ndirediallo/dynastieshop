@@ -33,6 +33,10 @@ export async function updateSettings(input: SettingsInput) {
       defaultDeliveryFee: data.defaultDeliveryFee,
       idleTimeoutMinutes: data.idleTimeoutMinutes,
       idleTimeoutMode: data.idleTimeoutMode,
+      workHoursEnabled: data.workHoursEnabled,
+      workHoursStart: data.workHoursStart,
+      workHoursEnd: data.workHoursEnd,
+      workHoursDays: data.workHoursDays,
     },
   });
 

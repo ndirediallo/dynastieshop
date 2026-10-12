@@ -5,6 +5,7 @@ import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity-log";
 import { getSettings } from "@/lib/settings";
+import { isWithinWorkHours, resolveWorkHoursConfig } from "@/lib/work-hours";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -57,6 +58,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { id: user.id },
             data: { failedLoginAttempts: 0, lockedUntil: null },
           });
+        }
+
+        // Horaires de connexion — jamais appliqué à un Super Admin (voir
+        // discussion avec l'utilisateur : accès remote restreint pour
+        // réduire le risque d'abus hors supervision, mais le Super Admin
+        // doit toujours pouvoir intervenir). Une exception ponctuelle
+        // accordée par la Super Admin (voir utilisateurs/[id]) passe outre,
+        // le temps qu'elle reste valide.
+        if (user.role !== "SUPER_ADMIN") {
+          const now = new Date();
+          const exceptionActive =
+            !!user.workHoursExceptionUntil && user.workHoursExceptionUntil > now;
+          if (!exceptionActive) {
+            const settings = await getSettings();
+            const config = resolveWorkHoursConfig({
+              mode: user.workHoursMode,
+              customStart: user.workHoursStart,
+              customEnd: user.workHoursEnd,
+              customDays: user.workHoursDays,
+              globalEnabled: settings.workHoursEnabled,
+              globalStart: settings.workHoursStart,
+              globalEnd: settings.workHoursEnd,
+              globalDays: settings.workHoursDays,
+            });
+            if (!isWithinWorkHours(config, now)) {
+              await logActivity({
+                userId: user.id,
+                action: "LOGIN_BLOCKED_HOURS",
+                entityType: "User",
+                entityId: user.id,
+                details: `Connexion refusée hors horaires autorisés pour ${user.name}`,
+              });
+              return null;
+            }
+          }
         }
 
         await logActivity({

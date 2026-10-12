@@ -43,6 +43,10 @@ export default async function ParametresPage() {
               defaultDeliveryFee: settings.defaultDeliveryFee,
               idleTimeoutMinutes: settings.idleTimeoutMinutes,
               idleTimeoutMode: settings.idleTimeoutMode,
+              workHoursEnabled: settings.workHoursEnabled,
+              workHoursStart: settings.workHoursStart,
+              workHoursEnd: settings.workHoursEnd,
+              workHoursDays: settings.workHoursDays,
             }}
           />
         </div>

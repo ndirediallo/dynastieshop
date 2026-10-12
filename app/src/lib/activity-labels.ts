@@ -3,6 +3,7 @@
 // (vue filtrée sur un seul compte), pour ne jamais diverger entre les deux.
 export const ACTION_LABELS: Record<string, string> = {
   LOGIN: "Connexion",
+  LOGIN_BLOCKED_HOURS: "Connexion refusée (hors horaires)",
   BOUTIQUE_CREATED: "Boutique créée",
   BOUTIQUE_UPDATED: "Boutique modifiée",
   BOUTIQUE_ACTIVATED: "Boutique activée",
@@ -11,6 +12,7 @@ export const ACTION_LABELS: Record<string, string> = {
   USER_UPDATED: "Utilisateur modifié",
   USER_ACTIVATED: "Utilisateur activé",
   USER_DEACTIVATED: "Utilisateur désactivé",
+  USER_DELETED: "Utilisateur supprimé",
   SETTINGS_UPDATED: "Paramètres modifiés",
   SETTINGS_LOGO_UPDATED: "Logo mis à jour",
   PRODUCT_CREATED: "Produit créé",

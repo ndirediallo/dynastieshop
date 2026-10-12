@@ -7,6 +7,8 @@ import { ROLE_LABELS } from "@/lib/permissions";
 import { PageHeader } from "@/components/page-header";
 import { UserDialog } from "./user-dialog";
 import { ToggleActiveButton } from "./toggle-active-button";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
+import { deleteUser } from "./actions";
 import { cn } from "@/lib/utils";
 
 const ROLE_TINTS: Record<string, { bg: string; fg: string }> = {
@@ -119,7 +121,16 @@ export default async function UtilisateursPage() {
                     <Store className="size-3.5 shrink-0" />
                     {user.boutique?.name ?? "Aucune boutique assignée"}
                   </div>
-                  <ToggleActiveButton id={user.id} active={user.active} />
+                  <div className="flex items-center gap-1">
+                    {user.role !== "SUPER_ADMIN" && (
+                      <ConfirmDeleteButton
+                        onConfirm={deleteUser.bind(null, user.id)}
+                        title={`Supprimer "${user.name}" ?`}
+                        description="Impossible si ce compte a déjà des ventes, mouvements de stock, transferts ou commandes. Désactivez-le dans ce cas plutôt que de le supprimer."
+                      />
+                    )}
+                    <ToggleActiveButton id={user.id} active={user.active} />
+                  </div>
                 </div>
 
                 <Button

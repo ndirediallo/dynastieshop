@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { WORK_HOURS_DAYS, WORK_HOURS_DAY_LABELS } from "@/lib/work-hours";
 import { settingsSchema, type SettingsInput } from "@/lib/schemas";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from "@/lib/payment-methods";
 import { updateSettings } from "./actions";
@@ -47,6 +48,8 @@ export function SettingsForm({ settings }: { settings: SettingsInput }) {
     resolver: zodResolver(settingsSchema),
     defaultValues: settings,
   });
+
+  const workHoursEnabled = useWatch({ control, name: "workHoursEnabled" });
 
   const onSubmit = async (values: SettingsInput) => {
     setIsSubmitting(true);
@@ -326,6 +329,103 @@ export function SettingsForm({ settings }: { settings: SettingsInput }) {
               qu&apos;un poste resté connecté sans surveillance reste
               accessible indéfiniment.
             </p>
+          </div>
+
+          <Separator />
+
+          <div>
+            <label
+              htmlFor="workHoursEnabled"
+              className="flex cursor-pointer items-start gap-2.5 rounded-md border p-3 text-sm hover:bg-muted/40"
+            >
+              <Controller
+                control={control}
+                name="workHoursEnabled"
+                render={({ field }) => (
+                  <input
+                    id="workHoursEnabled"
+                    type="checkbox"
+                    className="mt-0.5 size-4 shrink-0 accent-primary"
+                    checked={field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                )}
+              />
+              <span>
+                <span className="font-medium">Horaires de connexion</span>
+                <span className="block text-xs text-muted-foreground">
+                  En dehors de cette plage, un compte (hors Super Admin) ne
+                  peut pas se connecter — protège contre un accès à
+                  distance non supervisé.
+                </span>
+              </span>
+            </label>
+
+            {workHoursEnabled && (
+              <div className="mt-3 space-y-3 rounded-md border p-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="workHoursStart" className="text-xs">
+                      De
+                    </Label>
+                    <Input
+                      id="workHoursStart"
+                      type="time"
+                      {...register("workHoursStart")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="workHoursEnd" className="text-xs">
+                      À
+                    </Label>
+                    <Input id="workHoursEnd" type="time" {...register("workHoursEnd")} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Jours autorisés</Label>
+                  <Controller
+                    control={control}
+                    name="workHoursDays"
+                    render={({ field }) => (
+                      <div className="flex flex-wrap gap-1.5">
+                        {WORK_HOURS_DAYS.map((day) => {
+                          const checked = field.value.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() =>
+                                field.onChange(
+                                  checked
+                                    ? field.value.filter((d) => d !== day)
+                                    : [...field.value, day]
+                                )
+                              }
+                              className={cn(
+                                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                                checked
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border text-muted-foreground hover:bg-muted"
+                              )}
+                            >
+                              {WORK_HOURS_DAY_LABELS[day]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+            {errors.workHoursStart && (
+              <p className="mt-2 text-sm text-destructive">
+                {errors.workHoursStart.message}
+              </p>
+            )}
+            {errors.workHoursEnd && (
+              <p className="mt-2 text-sm text-destructive">{errors.workHoursEnd.message}</p>
+            )}
           </div>
 
           <Separator />

@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 import { ToggleActiveButton } from "../toggle-active-button";
+import { WorkHoursCard } from "./work-hours-card";
 
 const ROLE_TINTS: Record<string, { bg: string; fg: string }> = {
   SUPER_ADMIN: { bg: "bg-primary/10", fg: "text-primary" },
@@ -195,6 +196,22 @@ export default async function UserProfilePage({
             ))}
           </CardContent>
         </Card>
+      )}
+
+      {user.role !== "SUPER_ADMIN" && (
+        <WorkHoursCard
+          userId={user.id}
+          userName={user.name}
+          mode={user.workHoursMode}
+          start={user.workHoursStart}
+          end={user.workHoursEnd}
+          days={user.workHoursDays}
+          exceptionUntil={user.workHoursExceptionUntil}
+          globalEnabled={settings.workHoursEnabled}
+          globalStart={settings.workHoursStart}
+          globalEnd={settings.workHoursEnd}
+          globalDays={settings.workHoursDays}
+        />
       )}
 
       <Card>

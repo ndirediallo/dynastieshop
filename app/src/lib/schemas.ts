@@ -21,6 +21,10 @@ const pinField = z
   .string()
   .regex(/^\d{4}$/, "Le mot de passe doit contenir exactement 4 chiffres");
 
+const timeField = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Heure invalide (format HH:MM)");
+
 export const userCreateSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères"),
   phone: phoneField,
@@ -99,8 +103,34 @@ export const settingsSchema = z.object({
   // 0 = désactivé.
   idleTimeoutMinutes: z.number().int().min(0).max(240),
   idleTimeoutMode: z.enum(["LOCK", "LOGOUT"]),
+  workHoursEnabled: z.boolean(),
+  workHoursStart: timeField,
+  workHoursEnd: timeField,
+  workHoursDays: z.array(z.string()),
 });
 export type SettingsInput = z.infer<typeof settingsSchema>;
+
+// Horaire de connexion propre à un compte (page profil utilisateur) — voir
+// src/lib/work-hours.ts pour comment il se combine avec le réglage global.
+export const userWorkHoursSchema = z
+  .object({
+    mode: z.enum(["INHERIT", "CUSTOM", "UNRESTRICTED"]),
+    start: timeField,
+    end: timeField,
+    days: z.array(z.string()),
+  })
+  .refine((data) => data.mode !== "CUSTOM" || data.days.length > 0, {
+    message: "Sélectionnez au moins un jour",
+    path: ["days"],
+  });
+export type UserWorkHoursInput = z.infer<typeof userWorkHoursSchema>;
+
+// Dérogation ponctuelle — une date/heure future jusqu'à laquelle la
+// connexion est autorisée même hors horaire normal.
+export const workHoursExceptionSchema = z.object({
+  until: z.string().min(1, "Choisissez une date et une heure"),
+});
+export type WorkHoursExceptionInput = z.infer<typeof workHoursExceptionSchema>;
 
 export const categorySchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères"),
